@@ -755,6 +755,17 @@ function CallInterface({ roomId, isCaller, onLeave }: { roomId: string, isCaller
   const [localUserData, setLocalUserData] = useState<any>(null);
   const [remoteUserData, setRemoteUserData] = useState<any>(null);
 
+  const handleLeave = async () => {
+    localStreamRef.current?.getTracks().forEach(track => track.stop());
+    if (pcRef.current) {
+      pcRef.current.close();
+    }
+    try {
+      await deleteDoc(doc(db, 'rooms', roomId));
+    } catch (e) {}
+    onLeave();
+  };
+
   useEffect(() => {
     if (!currentUser) return;
     const unsub = onSnapshot(doc(db, 'users', currentUser.uid), (docSnap) => {
@@ -770,6 +781,7 @@ function CallInterface({ roomId, isCaller, onLeave }: { roomId: string, isCaller
     let unsubCallerCand: () => void;
     let unsubCalleeCand: () => void;
     let unsubRemoteUser: () => void;
+    let pendingCandidates: RTCIceCandidateInit[] = [];
 
     const initCall = async () => {
       try {
@@ -813,7 +825,7 @@ function CallInterface({ roomId, isCaller, onLeave }: { roomId: string, isCaller
         };
 
         pc.oniceconnectionstatechange = () => {
-          if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed') {
+          if (pc.iceConnectionState === 'disconnected' || pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'closed') {
             setStatus('Desconectado');
             handleLeave();
           }
@@ -840,29 +852,49 @@ function CallInterface({ roomId, isCaller, onLeave }: { roomId: string, isCaller
           await pc.setLocalDescription(offer);
           await updateDoc(roomRef, { offer: { type: offer.type, sdp: offer.sdp } });
 
-          unsubRoom = onSnapshot(roomRef, (snap) => {
+          unsubRoom = onSnapshot(roomRef, async (snap) => {
+            if (!snap.exists()) {
+              handleLeave();
+              return;
+            }
             const data = snap.data();
             if (!pc.currentRemoteDescription && data?.answer) {
               const rtcSessionDescription = new RTCSessionDescription(data.answer);
-              pc.setRemoteDescription(rtcSessionDescription);
+              await pc.setRemoteDescription(rtcSessionDescription);
+              
+              // Process buffered candidates
+              pendingCandidates.forEach(cand => pc.addIceCandidate(new RTCIceCandidate(cand)).catch(console.error));
+              pendingCandidates = [];
             }
           });
 
           unsubCalleeCand = onSnapshot(calleeCandidatesCollection, (snap) => {
             snap.docChanges().forEach((change) => {
               if (change.type === 'added') {
-                const candidate = new RTCIceCandidate(change.doc.data());
-                pc.addIceCandidate(candidate);
+                const candidate = change.doc.data() as RTCIceCandidateInit;
+                if (pc.remoteDescription) {
+                  pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
+                } else {
+                  pendingCandidates.push(candidate);
+                }
               }
             });
           });
         } else {
           // Callee logic
           unsubRoom = onSnapshot(roomRef, async (snap) => {
+            if (!snap.exists()) {
+              handleLeave();
+              return;
+            }
             const data = snap.data();
             if (!pc.currentRemoteDescription && data?.offer) {
               const rtcSessionDescription = new RTCSessionDescription(data.offer);
               await pc.setRemoteDescription(rtcSessionDescription);
+              
+              // Process buffered candidates
+              pendingCandidates.forEach(cand => pc.addIceCandidate(new RTCIceCandidate(cand)).catch(console.error));
+              pendingCandidates = [];
               
               const answer = await pc.createAnswer();
               await pc.setLocalDescription(answer);
@@ -873,8 +905,12 @@ function CallInterface({ roomId, isCaller, onLeave }: { roomId: string, isCaller
           unsubCallerCand = onSnapshot(callerCandidatesCollection, (snap) => {
             snap.docChanges().forEach((change) => {
               if (change.type === 'added') {
-                const candidate = new RTCIceCandidate(change.doc.data());
-                pc.addIceCandidate(candidate);
+                const candidate = change.doc.data() as RTCIceCandidateInit;
+                if (pc.remoteDescription) {
+                  pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
+                } else {
+                  pendingCandidates.push(candidate);
+                }
               }
             });
           });
@@ -893,7 +929,9 @@ function CallInterface({ roomId, isCaller, onLeave }: { roomId: string, isCaller
       if (unsubCalleeCand) unsubCalleeCand();
       if (unsubRemoteUser) unsubRemoteUser();
       localStreamRef.current?.getTracks().forEach(track => track.stop());
-      pcRef.current?.close();
+      if (pcRef.current) {
+        pcRef.current.close();
+      }
     };
   }, [roomId, isCaller]);
 
@@ -904,15 +942,6 @@ function CallInterface({ roomId, isCaller, onLeave }: { roomId: string, isCaller
       });
       setIsMuted(!isMuted);
     }
-  };
-
-  const handleLeave = async () => {
-    localStreamRef.current?.getTracks().forEach(track => track.stop());
-    pcRef.current?.close();
-    try {
-      await deleteDoc(doc(db, 'rooms', roomId));
-    } catch (e) {}
-    onLeave();
   };
 
   return (

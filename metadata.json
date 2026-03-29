@@ -1,0 +1,5 @@
+{
+  "name": "Papos",
+  "description": "Plataforma de chat exclusiva por voz.",
+  "requestFramePermissions": ["microphone"]
+}

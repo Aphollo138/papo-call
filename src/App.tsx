@@ -73,11 +73,11 @@ function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, ke
             <a href="#seguranca" className="text-sm font-medium text-text-muted hover:text-text-main transition-colors">Segurança</a>
             <a href="#baixar" className="text-sm font-medium text-text-muted hover:text-text-main transition-colors">Baixar</a>
           </nav>
-          <div className="flex items-center gap-4">
-            <button onClick={() => onNavigate('login')} className="text-sm font-medium text-text-main hover:text-white transition-colors cursor-pointer hidden sm:block">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <button onClick={() => onNavigate('login')} className="text-sm font-medium px-3 py-2 rounded-md text-text-main hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
               Entrar
             </button>
-            <button onClick={() => onNavigate('register')} className="text-sm font-medium px-4 py-2 rounded-md bg-blurple hover:bg-blurple-hover text-white transition-colors cursor-pointer">
+            <button onClick={() => onNavigate('register')} className="text-sm font-medium px-4 py-2 rounded-md bg-blurple hover:bg-blurple-hover text-white transition-colors cursor-pointer shadow-lg shadow-blurple/20">
               Cadastrar
             </button>
           </div>

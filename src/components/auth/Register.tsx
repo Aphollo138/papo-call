@@ -33,7 +33,7 @@ export default function Register({ onNext, onBack, onNavigate }: RegisterProps) 
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       
       const actionCodeSettings = {
-        url: 'http://localhost:3000/login',
+        url: 'https://papo.net.br/login',
         handleCodeInApp: true,
       };
       

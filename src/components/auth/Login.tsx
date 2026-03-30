@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Mail, Lock, Loader2, ArrowRight } from 'lucide-react';
 import { auth, db } from '../../firebase';
@@ -18,6 +18,28 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        try {
+          await user.reload();
+          if (user.emailVerified) {
+            alert("E-mail confirmado! Redirecionando...");
+            const userDoc = await getDoc(doc(db, 'users', user.uid));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              onLogin({ ...userData, uid: user.uid });
+            }
+          }
+        } catch (err) {
+          console.error("Erro ao recarregar usuário:", err);
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [onLogin]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

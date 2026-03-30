@@ -141,8 +141,12 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
       setVerifyMessage('Verificando sua conta...');
       applyActionCode(auth, code)
         .then(() => {
-          setVerifyMessage('E-mail confirmado com sucesso! Agora você pode entrar.');
+          setVerifyMessage('E-mail verificado com sucesso! Agora, faça seu primeiro login.');
           window.history.replaceState({}, document.title, window.location.pathname);
+          // Sign out the user to prevent auto-login if they were still signed in from registration
+          if (auth.currentUser) {
+            auth.signOut();
+          }
         })
         .catch((err) => {
           console.error(err);
@@ -158,27 +162,8 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
     }
   }, []);
 
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        try {
-          await user.reload();
-          if (user.emailVerified) {
-            alert("E-mail confirmado! Redirecionando...");
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              onLogin({ ...userData, uid: user.uid });
-            }
-          }
-        } catch (err) {
-          console.error("Erro ao recarregar usuário:", err);
-        }
-      }
-    });
-
-    return () => unsubscribe();
-  }, [onLogin]);
+  // Remove the onAuthStateChanged useEffect that was auto-logging the user in
+  // to ensure they stay on the login screen to type their email and password manually.
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,9 +203,10 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
       </div>
 
       {verifyMessage && (
-        <div className={`p-4 rounded-lg mb-6 text-sm font-medium text-center ${verifyMessage.includes('sucesso') ? 'bg-green-500/20 text-green-400 border border-green-500/30' : verifyMessage.includes('Verificando') ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
-          {verifying && <Loader2 className="w-4 h-4 animate-spin inline-block mr-2" />}
-          {verifyMessage}
+        <div className={`p-4 rounded-lg mb-6 text-sm font-medium text-center flex items-center justify-center gap-2 ${verifyMessage.includes('sucesso') ? 'bg-green-500/20 text-green-400 border border-green-500/30' : verifyMessage.includes('Verificando') ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}`}>
+          {verifying && <Loader2 className="w-4 h-4 animate-spin shrink-0" />}
+          {verifyMessage.includes('sucesso') && <CheckCircle2 className="w-5 h-5 shrink-0" />}
+          <span>{verifyMessage}</span>
         </div>
       )}
 

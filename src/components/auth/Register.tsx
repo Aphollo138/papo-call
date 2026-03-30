@@ -13,8 +13,8 @@ interface RegisterProps {
 }
 
 const BLOCKED_DOMAINS = [
-  'tempmail.com',
-  'temp-mail.org',
+  'temp-mail.id',
+  'tempail.com',
   'adguard.com',
   '10minutemail.com',
   'yopmail.com',
@@ -25,9 +25,9 @@ const BLOCKED_DOMAINS = [
   'tempmail.net',
   'tempmail.ninja',
   'tempmail.plus',
-  'tempmail.dev',
+  'emailondeck.com',
   'tempmail.io',
-  'tempmail.co'
+  'invertexto.com'
 ];
 
 export default function Register({ onNext, onBack, onNavigate }: RegisterProps) {

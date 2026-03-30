@@ -12,22 +12,16 @@ interface RegisterProps {
   key?: string;
 }
 
-const BLOCKED_DOMAINS = [
-  'temp-mail.id',
-  'tempail.com',
-  'adguard.com',
-  '10minutemail.com',
-  'yopmail.com',
-  'guerrillamail.com',
-  'mailinator.com',
-  'dispostable.com',
-  'throwawaymail.com',
-  'tempmail.net',
-  'tempmail.ninja',
-  'tempmail.plus',
-  'emailondeck.com',
-  'tempmail.io',
-  'invertexto.com'
+const ALLOWED_DOMAINS = [
+  'gmail.com',
+  'outlook.com',
+  'hotmail.com',
+  'yahoo.com',
+  'yahoo.com.br',
+  'icloud.com',
+  'live.com',
+  'msn.com',
+  'papo.net.br'
 ];
 
 export default function Register({ onNext, onBack, onNavigate }: RegisterProps) {
@@ -41,9 +35,11 @@ export default function Register({ onNext, onBack, onNavigate }: RegisterProps) 
     setLoading(true);
     setError('');
     
-    const domain = formData.email.split('@')[1]?.toLowerCase();
-    if (domain && BLOCKED_DOMAINS.includes(domain)) {
-      setError('E-mails temporários não são permitidos. Por favor, use um provedor de e-mail válido (Gmail, Outlook, etc.).');
+    const emailTrimmed = formData.email.trim().toLowerCase();
+    const domain = emailTrimmed.substring(emailTrimmed.lastIndexOf("@") + 1);
+    
+    if (!ALLOWED_DOMAINS.includes(domain)) {
+      setError('Por favor, use um e-mail válido como Gmail, Outlook ou Yahoo.');
       setLoading(false);
       return;
     }

@@ -14,6 +14,7 @@ interface LoginProps {
 
 function ResetPasswordModal({ isOpen, onClose, oobCode }: { isOpen: boolean, onClose: () => void, oobCode: string }) {
   const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -22,6 +23,10 @@ function ResetPasswordModal({ isOpen, onClose, oobCode }: { isOpen: boolean, onC
     e.preventDefault();
     if (newPassword.length < 6) {
       setError('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('As senhas não coincidem.');
       return;
     }
     setLoading(true);
@@ -54,7 +59,7 @@ function ResetPasswordModal({ isOpen, onClose, oobCode }: { isOpen: boolean, onC
               {success ? (
                 <div className="text-center py-4">
                   <CheckCircle2 className="w-16 h-16 text-green-500 mb-4 mx-auto" />
-                  <p className="text-white font-medium mb-6">Senha redefinida com sucesso!</p>
+                  <p className="text-white font-medium mb-6">Senha atualizada com sucesso!</p>
                   <button onClick={onClose} className="w-full py-3 rounded-lg bg-[#5865F2] hover:bg-[#6f7bf7] text-white font-semibold transition-colors">
                     Fazer Login
                   </button>
@@ -62,6 +67,7 @@ function ResetPasswordModal({ isOpen, onClose, oobCode }: { isOpen: boolean, onC
               ) : (
                 <form onSubmit={handleReset} className="space-y-4">
                   <p className="text-zinc-400 text-sm mb-6">Digite sua nova senha abaixo.</p>
+                  
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Nova Senha</label>
                     <div className="relative">
@@ -79,9 +85,29 @@ function ResetPasswordModal({ isOpen, onClose, oobCode }: { isOpen: boolean, onC
                       />
                     </div>
                   </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Confirmar Nova Senha</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-zinc-500" />
+                      </div>
+                      <input
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="w-full bg-zinc-950 border border-white/5 rounded-lg pl-11 pr-4 py-3 text-white focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-all"
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  </div>
+
                   {error && <p className="text-red-400 text-sm">{error}</p>}
-                  <button type="submit" disabled={loading || !newPassword} className="w-full py-3 rounded-lg bg-[#5865F2] hover:bg-[#6f7bf7] text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-2">
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Nova Senha'}
+                  
+                  <button type="submit" disabled={loading || !newPassword || !confirmPassword} className="w-full py-3 rounded-lg bg-[#5865F2] hover:bg-[#6f7bf7] text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50 mt-2">
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Atualizar Senha'}
                   </button>
                 </form>
               )}

@@ -12,6 +12,24 @@ interface RegisterProps {
   key?: string;
 }
 
+const BLOCKED_DOMAINS = [
+  'tempmail.com',
+  'temp-mail.org',
+  'adguard.com',
+  '10minutemail.com',
+  'yopmail.com',
+  'guerrillamail.com',
+  'mailinator.com',
+  'dispostable.com',
+  'throwawaymail.com',
+  'tempmail.net',
+  'tempmail.ninja',
+  'tempmail.plus',
+  'tempmail.dev',
+  'tempmail.io',
+  'tempmail.co'
+];
+
 export default function Register({ onNext, onBack, onNavigate }: RegisterProps) {
   const [formData, setFormData] = useState({ name: '', email: '', username: '', password: '' });
   const [loading, setLoading] = useState(false);
@@ -23,6 +41,13 @@ export default function Register({ onNext, onBack, onNavigate }: RegisterProps) 
     setLoading(true);
     setError('');
     
+    const domain = formData.email.split('@')[1]?.toLowerCase();
+    if (domain && BLOCKED_DOMAINS.includes(domain)) {
+      setError('E-mails temporários não são permitidos. Por favor, use um provedor de e-mail válido (Gmail, Outlook, etc.).');
+      setLoading(false);
+      return;
+    }
+
     if (formData.password.length < 6) {
       setError('A senha deve ter pelo menos 6 caracteres.');
       setLoading(false);

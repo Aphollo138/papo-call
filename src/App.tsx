@@ -14,8 +14,10 @@ import Register from './components/auth/Register';
 import CompleteProfile from './components/auth/CompleteProfile';
 import Community from './components/Community';
 import SettingsModal from './components/ui/SettingsModal';
+import Terms from './components/legal/Terms';
+import Privacy from './components/legal/Privacy';
 
-type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call';
+type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('landing');
@@ -51,6 +53,8 @@ export default function App() {
         )}
         {appState === 'dashboard' && <Dashboard onMatch={(roomId, isCaller) => { setCallData({roomId, isCaller}); setAppState('call'); }} key="dashboard" />}
         {appState === 'call' && callData && <CallInterface roomId={callData.roomId} isCaller={callData.isCaller} onLeave={() => { setCallData(null); setAppState('dashboard'); }} key="call" />}
+        {appState === 'terms' && <Terms onBack={() => setAppState('landing')} key="terms" />}
+        {appState === 'privacy' && <Privacy onBack={() => setAppState('landing')} key="privacy" />}
       </AnimatePresence>
     </div>
   );
@@ -182,8 +186,8 @@ function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, ke
             <span className="text-lg font-bold text-text-muted">Papos</span>
           </div>
           <div className="flex items-center gap-6">
-            <a href="#" className="text-sm text-text-muted hover:text-white transition-colors">Termos</a>
-            <a href="#" className="text-sm text-text-muted hover:text-white transition-colors">Privacidade</a>
+            <button onClick={() => onNavigate('terms')} className="text-sm text-text-muted hover:text-white transition-colors">Termos</button>
+            <button onClick={() => onNavigate('privacy')} className="text-sm text-text-muted hover:text-white transition-colors">Privacidade</button>
           </div>
         </div>
       </footer>

@@ -181,6 +181,14 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
       const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
+        
+        if (userData.isBanned === true) {
+          await auth.signOut();
+          setError(`Você foi banido. Motivo: ${userData.banReason || 'Violação dos Termos de Uso'}`);
+          setLoading(false);
+          return;
+        }
+
         onLogin({ ...userData, uid: userCredential.user.uid });
       } else {
         setError('Erro ao buscar dados do usuário.');

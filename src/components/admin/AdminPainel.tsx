@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { Users, Ticket, ShieldAlert, ShieldCheck, CheckCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Users, Ticket, ShieldAlert, ShieldCheck, CheckCircle, ArrowLeft, Loader2, Search, X } from 'lucide-react';
 import { auth, db } from '../../firebase';
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
 
@@ -15,6 +15,12 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  // Ban Modal State
+  const [banModalOpen, setBanModalOpen] = useState(false);
+  const [userToBan, setUserToBan] = useState<any>(null);
+  const [banReason, setBanReason] = useState('');
 
   const ADMIN_UID = 'XfWanDGXhHbfz9ahH6N11I9UunG3';
 
@@ -57,15 +63,44 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     }
   };
 
-  const handleToggleBan = async (userId: string, currentStatus: boolean) => {
-    setActionLoading(userId);
+  const handleToggleBan = async (user: any) => {
+    if (user.isBanned) {
+      // Unban directly
+      setActionLoading(user.id);
+      try {
+        await updateDoc(doc(db, 'users', user.id), {
+          isBanned: false,
+          banReason: null
+        });
+        setUsers(users.map(u => u.id === user.id ? { ...u, isBanned: false, banReason: null } : u));
+      } catch (error) {
+        console.error("Erro ao desbanir usuário:", error);
+      } finally {
+        setActionLoading(null);
+      }
+    } else {
+      // Open ban modal
+      setUserToBan(user);
+      setBanReason('');
+      setBanModalOpen(true);
+    }
+  };
+
+  const confirmBan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userToBan || !banReason.trim()) return;
+
+    setActionLoading(userToBan.id);
     try {
-      await updateDoc(doc(db, 'users', userId), {
-        isBanned: !currentStatus
+      await updateDoc(doc(db, 'users', userToBan.id), {
+        isBanned: true,
+        banReason: banReason.trim()
       });
-      setUsers(users.map(u => u.id === userId ? { ...u, isBanned: !currentStatus } : u));
+      setUsers(users.map(u => u.id === userToBan.id ? { ...u, isBanned: true, banReason: banReason.trim() } : u));
+      setBanModalOpen(false);
+      setUserToBan(null);
     } catch (error) {
-      console.error("Erro ao atualizar status do usuário:", error);
+      console.error("Erro ao banir usuário:", error);
     } finally {
       setActionLoading(null);
     }
@@ -85,6 +120,13 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     }
   };
 
+  const filteredUsers = users.filter(user => {
+    const searchLower = searchQuery.toLowerCase();
+    const nameMatch = (user.name || user.displayName || '').toLowerCase().includes(searchLower);
+    const usernameMatch = (user.username || '').toLowerCase().includes(searchLower);
+    return nameMatch || usernameMatch;
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
@@ -94,7 +136,70 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300 flex flex-col md:flex-row">
+    <div className="min-h-screen bg-zinc-950 text-zinc-300 flex flex-col md:flex-row relative">
+      {/* Ban Modal */}
+      <AnimatePresence>
+        {banModalOpen && userToBan && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden relative"
+            >
+              <button 
+                onClick={() => setBanModalOpen(false)} 
+                className="absolute top-4 right-4 p-1 text-zinc-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                    <ShieldAlert className="w-5 h-5 text-red-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white leading-tight">Banir Usuário</h2>
+                    <p className="text-sm text-zinc-400">@{userToBan.username || 'user'}</p>
+                  </div>
+                </div>
+                
+                <form onSubmit={confirmBan} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Motivo do Banimento</label>
+                    <input
+                      type="text"
+                      value={banReason}
+                      onChange={(e) => setBanReason(e.target.value)}
+                      className="w-full bg-zinc-950 border border-white/5 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
+                      placeholder="Ex: Violação das regras da comunidade"
+                      required
+                      autoFocus
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setBanModalOpen(false)}
+                      className="flex-1 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-semibold transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={actionLoading === userToBan.id || !banReason.trim()}
+                      className="flex-1 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {actionLoading === userToBan.id ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar Ban'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <div className="w-full md:w-64 bg-zinc-900 border-b md:border-b-0 md:border-r border-white/5 p-6 flex flex-col shrink-0">
         <div className="flex items-center gap-3 mb-10">
@@ -148,7 +253,22 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
         >
           {activeTab === 'users' && (
             <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-white">Gerenciar Usuários</h2>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-white">Gerenciar Usuários</h2>
+                <div className="relative w-full sm:w-72">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-zinc-500" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Buscar por nome ou @username"
+                    className="w-full bg-zinc-900 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-all"
+                  />
+                </div>
+              </div>
+              
               <div className="bg-zinc-900 border border-white/5 rounded-2xl overflow-hidden overflow-x-auto">
                 <table className="w-full text-left border-collapse min-w-[600px]">
                   <thead>
@@ -160,30 +280,43 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {users.map(user => (
-                      <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
-                        <td className="p-4">
-                          <div className="font-medium text-white">{user.name || user.displayName || 'Sem Nome'}</div>
-                          <div className="text-xs text-zinc-500">@{user.username || 'user'}</div>
-                        </td>
-                        <td className="p-4 text-sm text-zinc-400">{user.email}</td>
-                        <td className="p-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isBanned ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                            {user.isBanned ? 'Banido' : 'Ativo'}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right">
-                          <button 
-                            onClick={() => handleToggleBan(user.id, !!user.isBanned)}
-                            disabled={actionLoading === user.id || user.id === ADMIN_UID}
-                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${user.isBanned ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-red-500/10 hover:bg-red-500/20 text-red-500'}`}
-                          >
-                            {actionLoading === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : user.isBanned ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
-                            {user.isBanned ? 'Desbanir' : 'Banir'}
-                          </button>
+                    {filteredUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="p-8 text-center text-zinc-500">
+                          Nenhum usuário encontrado.
                         </td>
                       </tr>
-                    ))}
+                    ) : (
+                      filteredUsers.map(user => (
+                        <tr key={user.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="p-4">
+                            <div className="font-medium text-white">{user.name || user.displayName || 'Sem Nome'}</div>
+                            <div className="text-xs text-zinc-500">@{user.username || 'user'}</div>
+                          </td>
+                          <td className="p-4 text-sm text-zinc-400">{user.email}</td>
+                          <td className="p-4">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isBanned ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
+                              {user.isBanned ? 'Banido' : 'Ativo'}
+                            </span>
+                            {user.isBanned && user.banReason && (
+                              <div className="text-[10px] text-red-400/70 mt-1 max-w-[150px] truncate" title={user.banReason}>
+                                {user.banReason}
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4 text-right">
+                            <button 
+                              onClick={() => handleToggleBan(user)}
+                              disabled={actionLoading === user.id || user.id === ADMIN_UID}
+                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${user.isBanned ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-red-500/10 hover:bg-red-500/20 text-red-500'}`}
+                            >
+                              {actionLoading === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : user.isBanned ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+                              {user.isBanned ? 'Desbanir' : 'Banir'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>

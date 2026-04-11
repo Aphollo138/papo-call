@@ -18,6 +18,7 @@ import Terms from './components/legal/Terms';
 import Privacy from './components/legal/Privacy';
 import AdminPanel from './components/admin/AdminPainel';
 import SupportTicketModal from './components/ui/SupportTicketModal';
+import TicketDetails from './components/ui/TicketDetails';
 
 type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin';
 
@@ -212,6 +213,7 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
 function SupportTab() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const currentUser = auth.currentUser;
 
   useEffect(() => {
@@ -245,7 +247,11 @@ function SupportTab() {
           </div>
         ) : (
           tickets.map(ticket => (
-            <div key={ticket.id} className="bg-zinc-900 border border-white/5 rounded-xl p-5">
+            <div 
+              key={ticket.id} 
+              onClick={() => setSelectedTicketId(ticket.id)}
+              className="bg-zinc-900 border border-white/5 rounded-xl p-5 cursor-pointer hover:border-white/10 transition-colors"
+            >
               <div className="flex items-center justify-between mb-3">
                 <span className="px-2.5 py-1 rounded-md bg-[#5865F2]/10 text-[#5865F2] text-xs font-bold uppercase tracking-wider">
                   {ticket.type}
@@ -254,13 +260,22 @@ function SupportTab() {
                   {ticket.status === 'open' ? 'Em análise' : 'Resolvido'}
                 </span>
               </div>
-              <p className="text-zinc-300 text-sm">{ticket.description}</p>
+              <p className="text-zinc-300 text-sm line-clamp-2">{ticket.description}</p>
             </div>
           ))
         )}
       </div>
 
       <SupportTicketModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+      
+      {selectedTicketId && (
+        <TicketDetails
+          ticketId={selectedTicketId}
+          isOpen={!!selectedTicketId}
+          onClose={() => setSelectedTicketId(null)}
+          userRole="user"
+        />
+      )}
     </div>
   );
 }

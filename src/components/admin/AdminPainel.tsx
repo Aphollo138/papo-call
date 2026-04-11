@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Users, Ticket, ShieldAlert, ShieldCheck, CheckCircle, ArrowLeft, Loader2, Search, X } from 'lucide-react';
 import { auth, db } from '../../firebase';
 import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
+import TicketDetails from '../ui/TicketDetails';
 
 interface AdminPanelProps {
   onNavigate: (state: any) => void;
@@ -17,6 +18,9 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   
+  // Ticket Details State
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+
   // Ban Modal State
   const [banModalOpen, setBanModalOpen] = useState(false);
   const [userToBan, setUserToBan] = useState<any>(null);
@@ -468,7 +472,11 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
               ) : (
                 <div className="grid gap-4">
                   {tickets.map(ticket => (
-                    <div key={ticket.id} className="bg-zinc-900 border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                    <div 
+                      key={ticket.id} 
+                      onClick={() => setSelectedTicketId(ticket.id)}
+                      className="bg-zinc-900 border border-white/5 rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between cursor-pointer hover:border-white/10 transition-colors"
+                    >
                       <div className="space-y-2 flex-1">
                         <div className="flex items-center gap-3">
                           <span className="px-2.5 py-1 rounded-md bg-[#5865F2]/10 text-[#5865F2] text-xs font-bold uppercase tracking-wider">
@@ -476,10 +484,13 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                           </span>
                           <span className="text-xs text-zinc-500 font-mono">ID: {ticket.userId}</span>
                         </div>
-                        <p className="text-zinc-300 text-sm leading-relaxed">{ticket.description}</p>
+                        <p className="text-zinc-300 text-sm leading-relaxed line-clamp-2">{ticket.description}</p>
                       </div>
                       <button 
-                        onClick={() => handleResolveTicket(ticket.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleResolveTicket(ticket.id);
+                        }}
                         disabled={actionLoading === ticket.id}
                         className="shrink-0 inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-green-500/10 hover:bg-green-500/20 text-green-500 text-sm font-medium transition-colors disabled:opacity-50"
                       >
@@ -494,6 +505,16 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
           )}
         </motion.div>
       </div>
+
+      {/* Ticket Details Modal */}
+      {selectedTicketId && (
+        <TicketDetails
+          ticketId={selectedTicketId}
+          isOpen={!!selectedTicketId}
+          onClose={() => setSelectedTicketId(null)}
+          userRole="admin"
+        />
+      )}
     </div>
   );
 }

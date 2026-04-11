@@ -22,6 +22,12 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
   const [userToBan, setUserToBan] = useState<any>(null);
   const [banReason, setBanReason] = useState('');
 
+  // Suspend Modal State
+  const [suspendModalOpen, setSuspendModalOpen] = useState(false);
+  const [userToSuspend, setUserToSuspend] = useState<any>(null);
+  const [suspendReason, setSuspendReason] = useState('');
+  const [suspendDuration, setSuspendDuration] = useState<number>(60000);
+
   const ADMIN_UID = 'XfWanDGXhHbfz9ahH6N11I9UunG3';
 
   useEffect(() => {
@@ -64,15 +70,17 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
   };
 
   const handleToggleBan = async (user: any) => {
-    if (user.isBanned) {
+    if (user.isBanned || user.isSuspended) {
       // Unban directly
       setActionLoading(user.id);
       try {
         await updateDoc(doc(db, 'users', user.id), {
           isBanned: false,
+          isSuspended: false,
+          suspendedUntil: null,
           banReason: null
         });
-        setUsers(users.map(u => u.id === user.id ? { ...u, isBanned: false, banReason: null } : u));
+        setUsers(users.map(u => u.id === user.id ? { ...u, isBanned: false, isSuspended: false, suspendedUntil: null, banReason: null } : u));
       } catch (error) {
         console.error("Erro ao desbanir usuário:", error);
       } finally {
@@ -94,13 +102,45 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
     try {
       await updateDoc(doc(db, 'users', userToBan.id), {
         isBanned: true,
-        banReason: banReason.trim()
+        banReason: banReason.trim(),
+        isSuspended: false,
+        suspendedUntil: null
       });
-      setUsers(users.map(u => u.id === userToBan.id ? { ...u, isBanned: true, banReason: banReason.trim() } : u));
+      setUsers(users.map(u => u.id === userToBan.id ? { ...u, isBanned: true, banReason: banReason.trim(), isSuspended: false, suspendedUntil: null } : u));
       setBanModalOpen(false);
       setUserToBan(null);
     } catch (error) {
       console.error("Erro ao banir usuário:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleOpenSuspend = (user: any) => {
+    setUserToSuspend(user);
+    setSuspendReason('');
+    setSuspendDuration(60000);
+    setSuspendModalOpen(true);
+  };
+
+  const confirmSuspend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userToSuspend || !suspendReason.trim()) return;
+
+    setActionLoading(userToSuspend.id);
+    try {
+      const suspendedUntil = Date.now() + suspendDuration;
+      await updateDoc(doc(db, 'users', userToSuspend.id), {
+        isSuspended: true,
+        suspendedUntil,
+        banReason: suspendReason.trim(),
+        isBanned: false
+      });
+      setUsers(users.map(u => u.id === userToSuspend.id ? { ...u, isSuspended: true, suspendedUntil, banReason: suspendReason.trim(), isBanned: false } : u));
+      setSuspendModalOpen(false);
+      setUserToSuspend(null);
+    } catch (error) {
+      console.error("Erro ao suspender usuário:", error);
     } finally {
       setActionLoading(null);
     }
@@ -191,6 +231,81 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                       className="flex-1 py-3 rounded-lg bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       {actionLoading === userToBan.id ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar Ban'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Suspend Modal */}
+      <AnimatePresence>
+        {suspendModalOpen && userToSuspend && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden relative"
+            >
+              <button 
+                onClick={() => setSuspendModalOpen(false)} 
+                className="absolute top-4 right-4 p-1 text-zinc-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <ShieldAlert className="w-5 h-5 text-yellow-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white leading-tight">Suspender Usuário</h2>
+                    <p className="text-sm text-zinc-400">@{userToSuspend.username || 'user'}</p>
+                  </div>
+                </div>
+                
+                <form onSubmit={confirmSuspend} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tempo de Suspensão</label>
+                    <select
+                      value={suspendDuration}
+                      onChange={(e) => setSuspendDuration(Number(e.target.value))}
+                      className="w-full bg-zinc-950 border border-white/5 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value={60000}>1 minuto</option>
+                      <option value={600000}>10 minutos</option>
+                      <option value={3600000}>1 hora</option>
+                      <option value={86400000}>24 horas</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Motivo da Suspensão</label>
+                    <input
+                      type="text"
+                      value={suspendReason}
+                      onChange={(e) => setSuspendReason(e.target.value)}
+                      className="w-full bg-zinc-950 border border-white/5 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all"
+                      placeholder="Ex: Spam no chat"
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setSuspendModalOpen(false)}
+                      className="flex-1 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-semibold transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={actionLoading === userToSuspend.id || !suspendReason.trim()}
+                      className="flex-1 py-3 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {actionLoading === userToSuspend.id ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar Suspensão'}
                     </button>
                   </div>
                 </form>
@@ -295,24 +410,42 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                           </td>
                           <td className="p-4 text-sm text-zinc-400">{user.email}</td>
                           <td className="p-4">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isBanned ? 'bg-red-500/10 text-red-500' : 'bg-green-500/10 text-green-500'}`}>
-                              {user.isBanned ? 'Banido' : 'Ativo'}
-                            </span>
-                            {user.isBanned && user.banReason && (
-                              <div className="text-[10px] text-red-400/70 mt-1 max-w-[150px] truncate" title={user.banReason}>
-                                {user.banReason}
-                              </div>
-                            )}
+                            <div className="flex flex-col gap-1 items-start">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.isBanned ? 'bg-red-500/10 text-red-500' : user.isSuspended ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
+                                {user.isBanned ? 'Banido' : user.isSuspended ? 'Suspenso' : 'Ativo'}
+                              </span>
+                              {user.isBanned && user.banReason && (
+                                <div className="text-[10px] text-red-400/70 max-w-[150px] truncate" title={user.banReason}>
+                                  {user.banReason}
+                                </div>
+                              )}
+                              {user.isSuspended && user.suspendedUntil && (
+                                <div className="text-[10px] text-yellow-400/70 max-w-[150px] truncate" title={`Até: ${new Date(user.suspendedUntil).toLocaleString()}`}>
+                                  Até: {new Date(user.suspendedUntil).toLocaleString()}
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="p-4 text-right">
-                            <button 
-                              onClick={() => handleToggleBan(user)}
-                              disabled={actionLoading === user.id || user.id === ADMIN_UID}
-                              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${user.isBanned ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-red-500/10 hover:bg-red-500/20 text-red-500'}`}
-                            >
-                              {actionLoading === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : user.isBanned ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
-                              {user.isBanned ? 'Desbanir' : 'Banir'}
-                            </button>
+                            <div className="flex items-center justify-end gap-2">
+                              {!user.isBanned && !user.isSuspended && (
+                                <button 
+                                  onClick={() => handleOpenSuspend(user)}
+                                  disabled={actionLoading === user.id || user.id === ADMIN_UID}
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500"
+                                >
+                                  Suspender
+                                </button>
+                              )}
+                              <button 
+                                onClick={() => handleToggleBan(user)}
+                                disabled={actionLoading === user.id || user.id === ADMIN_UID}
+                                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${user.isBanned || user.isSuspended ? 'bg-zinc-800 hover:bg-zinc-700 text-white' : 'bg-red-500/10 hover:bg-red-500/20 text-red-500'}`}
+                              >
+                                {actionLoading === user.id ? <Loader2 className="w-4 h-4 animate-spin" /> : (user.isBanned || user.isSuspended) ? <ShieldCheck className="w-4 h-4" /> : <ShieldAlert className="w-4 h-4" />}
+                                {user.isBanned ? 'Desbanir' : user.isSuspended ? 'Remover Suspensão' : 'Banir'}
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))

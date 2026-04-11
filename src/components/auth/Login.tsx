@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Mail, Lock, Loader2, ArrowRight, X, CheckCircle2 } from 'lucide-react';
 import { auth, db } from '../../firebase';
 import { signInWithEmailAndPassword, applyActionCode, confirmPasswordReset } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import SupportModal from '../ui/SupportModal';
 
 interface LoginProps {
@@ -187,6 +187,26 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
           setError(`Você foi banido. Motivo: ${userData.banReason || 'Violação dos Termos de Uso'}`);
           setLoading(false);
           return;
+        }
+
+        if (userData.isSuspended === true && userData.suspendedUntil) {
+          if (Date.now() < userData.suspendedUntil) {
+            await auth.signOut();
+            const suspendedDate = new Date(userData.suspendedUntil).toLocaleString();
+            setError(`Sua conta está suspensa até ${suspendedDate}. Motivo: ${userData.banReason || 'Violação das regras'}`);
+            setLoading(false);
+            return;
+          } else {
+            // Suspension expired, remove it
+            await updateDoc(doc(db, 'users', userCredential.user.uid), {
+              isSuspended: false,
+              suspendedUntil: null,
+              banReason: null
+            });
+            userData.isSuspended = false;
+            userData.suspendedUntil = null;
+            userData.banReason = null;
+          }
         }
 
         onLogin({ ...userData, uid: userCredential.user.uid });

@@ -12,27 +12,36 @@ interface SupportTicketModalProps {
 export default function SupportTicketModal({ isOpen, onClose }: SupportTicketModalProps) {
   const [type, setType] = useState('Relatar Bug');
   const [description, setDescription] = useState('');
+  const [reportedUser, setReportedUser] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!description.trim() || !auth.currentUser) return;
+    if (type === 'Denunciar Usuário' && !reportedUser.trim()) return;
     
     setLoading(true);
     try {
-      await addDoc(collection(db, 'tickets'), {
+      const ticketData: any = {
         userId: auth.currentUser.uid,
         type,
         description,
         status: 'open',
         createdAt: serverTimestamp()
-      });
+      };
+
+      if (type === 'Denunciar Usuário') {
+        ticketData.reportedUser = reportedUser.trim();
+      }
+
+      await addDoc(collection(db, 'tickets'), ticketData);
       
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         setDescription('');
+        setReportedUser('');
         setType('Relatar Bug');
         onClose();
       }, 2000);
@@ -84,6 +93,20 @@ export default function SupportTicketModal({ isOpen, onClose }: SupportTicketMod
                       </div>
                     </div>
                   </div>
+
+                  {type === 'Denunciar Usuário' && (
+                    <div className="space-y-1">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Nome de Usuário a ser denunciado (@)</label>
+                      <input
+                        type="text"
+                        value={reportedUser}
+                        onChange={(e) => setReportedUser(e.target.value)}
+                        className="w-full bg-zinc-950 border border-white/5 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-all"
+                        placeholder="@username"
+                        required
+                      />
+                    </div>
+                  )}
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Descreva o problema com detalhes</label>

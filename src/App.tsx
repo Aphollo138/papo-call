@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Headphones, UserCheck, ShieldCheck, Twitter, Github, Linkedin, 
   Volume2, Mic, MicOff, PhoneOff, User, Loader2, Search, Activity, Hash, ArrowRight, Link as LinkIcon,
-  Lock, Eye, EyeOff, Settings, Users, Zap, X, Heart, MessageSquare
+  Lock, Eye, EyeOff, Settings, Users, Zap, X, Heart, MessageSquare, ShieldAlert
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from 'firebase/auth';
@@ -16,8 +16,10 @@ import Community from './components/Community';
 import SettingsModal from './components/ui/SettingsModal';
 import Terms from './components/legal/Terms';
 import Privacy from './components/legal/Privacy';
+import AdminPanel from './components/admin/AdminPainel';
+import SupportTicketModal from './components/ui/SupportTicketModal';
 
-type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy';
+type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('landing');
@@ -51,10 +53,11 @@ export default function App() {
             key="profile" 
           />
         )}
-        {appState === 'dashboard' && <Dashboard onMatch={(roomId, isCaller) => { setCallData({roomId, isCaller}); setAppState('call'); }} key="dashboard" />}
+        {appState === 'dashboard' && <Dashboard onMatch={(roomId, isCaller) => { setCallData({roomId, isCaller}); setAppState('call'); }} onNavigate={setAppState} key="dashboard" />}
         {appState === 'call' && callData && <CallInterface roomId={callData.roomId} isCaller={callData.isCaller} onLeave={() => { setCallData(null); setAppState('dashboard'); }} key="call" />}
         {appState === 'terms' && <Terms onBack={() => setAppState('landing')} key="terms" />}
         {appState === 'privacy' && <Privacy onBack={() => setAppState('landing')} key="privacy" />}
+        {appState === 'admin' && <AdminPanel onNavigate={setAppState} key="admin" />}
       </AnimatePresence>
     </div>
   );
@@ -207,120 +210,63 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
 
 // --- SUPPORT TAB ---
 function SupportTab() {
-  const [supportTab, setSupportTab] = useState<'abrir' | 'abertos'>('abrir');
-  const [title, setTitle] = useState('');
-  const [message, setMessage] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
   const currentUser = auth.currentUser;
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!currentUser) return;
-    const q = query(collection(db, 'support_tickets'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'tickets'), where('userId', '==', currentUser.uid), orderBy('createdAt', 'desc'));
     const unsub = onSnapshot(q, (snap) => {
       setTickets(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return unsub;
   }, [currentUser]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title || !message || !currentUser) return;
-    setLoading(true);
-    try {
-      await addDoc(collection(db, 'support_tickets'), {
-        userId: currentUser.uid,
-        title,
-        message,
-        status: 'Em análise',
-        createdAt: serverTimestamp()
-      });
-      setTitle('');
-      setMessage('');
-      setSupportTab('abertos');
-    } catch (error) {
-      console.error("Error adding ticket:", error);
-    }
-    setLoading(false);
-  };
-
   return (
     <div className="flex-1 overflow-y-auto pb-32 pt-6 px-6 w-full max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-6">Suporte</h2>
-      
-      <div className="flex gap-6 mb-8 border-b border-white/10">
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">Suporte</h2>
+          <p className="text-zinc-400 text-sm">Acompanhe seus chamados ou abra um novo.</p>
+        </div>
         <button 
-          onClick={() => setSupportTab('abrir')}
-          className={`text-sm font-bold uppercase tracking-wider transition-colors pb-3 -mb-[1px] ${supportTab === 'abrir' ? 'text-[#5865F2] border-b-2 border-[#5865F2]' : 'text-zinc-500 hover:text-zinc-300'}`}
+          onClick={() => setIsModalOpen(true)}
+          className="px-4 py-2 bg-[#5865F2] hover:bg-[#6f7bf7] text-white text-sm font-medium rounded-lg transition-colors"
         >
-          Abrir
-        </button>
-        <button 
-          onClick={() => setSupportTab('abertos')}
-          className={`text-sm font-bold uppercase tracking-wider transition-colors pb-3 -mb-[1px] ${supportTab === 'abertos' ? 'text-[#5865F2] border-b-2 border-[#5865F2]' : 'text-zinc-500 hover:text-zinc-300'}`}
-        >
-          Abertos
+          Abrir Chamado
         </button>
       </div>
 
-      {supportTab === 'abrir' ? (
-        <form onSubmit={handleSubmit} className="bg-zinc-900/50 border border-white/5 rounded-2xl p-5 mb-8">
-          <div className="space-y-4">
-            <div>
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Título</label>
-              <input 
-                type="text" 
-                value={title} 
-                onChange={e => setTitle(e.target.value)} 
-                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-all" 
-                placeholder="Ex: Problema com o áudio" 
-                required
-              />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-1 block">Mensagem</label>
-              <textarea 
-                value={message} 
-                onChange={e => setMessage(e.target.value)} 
-                className="w-full bg-zinc-900 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-[#5865F2] focus:ring-1 focus:ring-[#5865F2] transition-all min-h-[100px] resize-none" 
-                placeholder="Descreva seu problema..." 
-                required
-              />
-            </div>
-            <button 
-              type="submit" 
-              disabled={loading || !title || !message}
-              className="w-full py-3 rounded-lg bg-[#5865F2] hover:bg-[#6f7bf7] text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Abrir Chamado'}
-            </button>
+      <div className="space-y-4">
+        {tickets.length === 0 ? (
+          <div className="bg-zinc-900/30 border border-white/5 rounded-2xl p-12 text-center">
+            <p className="text-zinc-500">Você não tem nenhum chamado aberto.</p>
           </div>
-        </form>
-      ) : (
-        <div className="space-y-3">
-          {tickets.length === 0 ? (
-            <p className="text-zinc-500 text-sm text-center py-8">Nenhum chamado aberto.</p>
-          ) : (
-            tickets.map(ticket => (
-              <div key={ticket.id} className="bg-zinc-900/30 border border-white/5 rounded-xl p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h4 className="text-white font-medium">{ticket.title}</h4>
-                  <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase tracking-wider ${ticket.status === 'Em análise' ? 'bg-yellow-500/20 text-yellow-500' : 'bg-green-500/20 text-green-500'}`}>
-                    {ticket.status}
-                  </span>
-                </div>
-                <p className="text-zinc-400 text-sm line-clamp-2">{ticket.message}</p>
+        ) : (
+          tickets.map(ticket => (
+            <div key={ticket.id} className="bg-zinc-900 border border-white/5 rounded-xl p-5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="px-2.5 py-1 rounded-md bg-[#5865F2]/10 text-[#5865F2] text-xs font-bold uppercase tracking-wider">
+                  {ticket.type}
+                </span>
+                <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full ${ticket.status === 'open' ? 'bg-yellow-500/10 text-yellow-500' : 'bg-green-500/10 text-green-500'}`}>
+                  {ticket.status === 'open' ? 'Em análise' : 'Resolvido'}
+                </span>
               </div>
-            ))
-          )}
-        </div>
-      )}
+              <p className="text-zinc-300 text-sm">{ticket.description}</p>
+            </div>
+          ))
+        )}
+      </div>
+
+      <SupportTicketModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }
 
 // --- DASHBOARD ---
-function Dashboard({ onMatch }: { onMatch: (roomId: string, isCaller: boolean) => void, key?: string }) {
+function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller: boolean) => void, onNavigate: (state: any) => void, key?: string }) {
   const currentUser = auth.currentUser;
   const [searching, setSearching] = useState(false);
   const [showMobileProfile, setShowMobileProfile] = useState(false);
@@ -506,6 +452,18 @@ function Dashboard({ onMatch }: { onMatch: (roomId: string, isCaller: boolean) =
                   </div>
                 )}
                 <div className="mt-4 pt-4 border-t border-white/5">
+                  {currentUser?.uid === 'XfWanDGXhHbfz9ahH6N11I9UunG3' && (
+                    <button 
+                      onClick={() => {
+                        setShowDesktopProfile(false);
+                        onNavigate('admin');
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-white/5 text-zinc-300 transition-colors mb-2"
+                    >
+                      <ShieldAlert className="w-4 h-4 text-red-400" />
+                      <span className="text-sm font-medium text-red-400">Painel Admin</span>
+                    </button>
+                  )}
                   <button 
                     onClick={() => {
                       setShowDesktopProfile(false);
@@ -671,6 +629,22 @@ function Dashboard({ onMatch }: { onMatch: (roomId: string, isCaller: boolean) =
                   </div>
                   <ArrowRight className="w-4 h-4 text-zinc-500" />
                 </button>
+                
+                {currentUser?.uid === 'XfWanDGXhHbfz9ahH6N11I9UunG3' && (
+                  <button 
+                    onClick={() => {
+                      setShowMobileProfile(false);
+                      onNavigate('admin');
+                    }}
+                    className="w-full flex items-center justify-between bg-zinc-900/50 rounded-xl p-4 border border-white/5 hover:bg-zinc-800/50 transition-colors mt-2"
+                  >
+                    <div className="flex items-center gap-3 text-red-400">
+                      <ShieldAlert className="w-5 h-5" />
+                      <span className="text-sm font-medium">Painel Admin</span>
+                    </div>
+                    <ArrowRight className="w-4 h-4 text-red-400/50" />
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>

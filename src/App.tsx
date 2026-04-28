@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Headphones, UserCheck, ShieldCheck, Twitter, Github, Linkedin, 
   Volume2, Mic, MicOff, PhoneOff, User, Loader2, Search, Activity, Hash, ArrowRight, Link as LinkIcon,
-  Lock, Eye, EyeOff, Settings, Users, Zap, X, Heart, MessageSquare, ShieldAlert
+  Lock, Eye, EyeOff, Settings, Users, Zap, X, Heart, MessageSquare, ShieldAlert, Globe
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from 'firebase/auth';
@@ -19,6 +19,8 @@ import Privacy from './components/legal/Privacy';
 import AdminPanel from './components/admin/AdminPainel';
 import SupportTicketModal from './components/ui/SupportTicketModal';
 import TicketDetails from './components/ui/TicketDetails';
+
+import GlobalChat from './components/GlobalChat';
 
 type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin';
 
@@ -287,7 +289,7 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
   const [showMobileProfile, setShowMobileProfile] = useState(false);
   const [showDesktopProfile, setShowDesktopProfile] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<'match' | 'support' | 'community'>('match');
+  const [activeTab, setActiveTab] = useState<'match' | 'support' | 'community' | 'global'>('match');
   const [userData, setUserData] = useState<any>(null);
 
   useEffect(() => {
@@ -420,6 +422,7 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
 
       {activeTab === 'support' && <SupportTab />}
       {activeTab === 'community' && <Community />}
+      {activeTab === 'global' && <GlobalChat />}
 
       {/* Desktop Bottom-Left Profile Widget */}
       <div className="hidden md:block fixed bottom-6 left-6 z-40">
@@ -710,7 +713,16 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
             <span className="text-[10px] font-medium leading-none whitespace-nowrap">Comunidade</span>
           </button>
 
-          {/* Button 4: Perfil (Mobile Only) */}
+          {/* Button 4: Global */}
+          <button 
+            onClick={() => setActiveTab('global')}
+            className={`flex flex-col items-center justify-center w-16 md:w-20 gap-1 transition-colors ${activeTab === 'global' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+          >
+            <Globe className="w-6 h-6" />
+            <span className="text-[10px] font-medium leading-none whitespace-nowrap">Global</span>
+          </button>
+
+          {/* Button 5: Perfil (Mobile Only) */}
           <button 
             onClick={() => setShowMobileProfile(true)}
             className="md:hidden flex flex-col items-center justify-center w-16 gap-1 text-zinc-500 hover:text-zinc-300 transition-colors"

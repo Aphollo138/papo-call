@@ -142,11 +142,12 @@ export default function GlobalChat() {
     if (!currentUser) return;
     const q = query(
       collection(db, 'direct_chats'),
-      where('participants', 'array-contains', currentUser.uid),
-      orderBy('updatedAt', 'desc')
+      where('participants', 'array-contains', currentUser.uid)
     );
     const unsub = onSnapshot(q, (snap) => {
-      setDmChats(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      const chats = snap.docs.map(d => ({ id: d.id, ...d.data() } as any));
+      chats.sort((a, b) => (b.updatedAt?.seconds || 0) - (a.updatedAt?.seconds || 0));
+      setDmChats(chats);
     });
     return () => unsub();
   }, [currentUser]);
@@ -236,7 +237,7 @@ export default function GlobalChat() {
   };
 
   return (
-    <div className="relative flex h-screen w-full bg-[#1e1e1e] overflow-hidden pb-12 md:pb-0 pt-0">
+    <div className="relative flex h-screen w-full bg-[#1e1e1e] overflow-hidden pb-24 pt-0">
       {showMobileLeft && <div className="absolute inset-0 z-20 bg-black/50 lg:hidden" onClick={() => setShowMobileLeft(false)} />}
       {showUsersList && <div className="absolute inset-0 z-20 bg-black/50 xl:hidden" onClick={() => setShowUsersList(false)} />}
       
@@ -295,7 +296,7 @@ export default function GlobalChat() {
       </div>
 
       {/* 2. Área principal */}
-      <div className="flex-1 flex flex-col relative h-full bg-[#18181b] min-w-0">
+      <div className="flex-1 flex flex-col relative h-full bg-[#18181b] min-w-0 min-h-0">
         <div className="h-16 min-h-[64px] border-b border-white/5 flex items-center px-4 lg:px-6 justify-between shrink-0">
           <div className="flex items-center gap-3">
             <button onClick={() => setShowMobileLeft(true)} className="lg:hidden p-2 text-zinc-400 hover:text-white"><Menu className="w-5 h-5"/></button>
@@ -311,7 +312,7 @@ export default function GlobalChat() {
         </div>
 
         {currentView === 'global' ? (
-           <div className="flex-1 overflow-y-auto w-full custom-scrollbar flex flex-col">
+           <div className="flex-1 min-h-0 overflow-y-auto w-full custom-scrollbar flex flex-col">
              <div className="bg-[#423c21]/80 text-[#e6d08c] px-6 py-3 text-sm flex items-center gap-2 border-b border-[#5e532b] shrink-0">
                <span className="font-bold">[NOTICE]</span> 
                <span>Lembre-se das regras da comunidade! Seja gentil com os outros usuários do Papos.</span>
@@ -331,7 +332,7 @@ export default function GlobalChat() {
                  <>
                    {messages.map((msg, index) => {
                      const showHeader = index === 0 || messages[index - 1].senderId !== msg.senderId;
-                     const msgTime = new Date(msg.createdAt?.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                     const msgTime = msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Agora';
                      return (
                        <div key={msg.id} className={`flex gap-4 ${!showHeader ? 'mt-1' : ''} max-w-full group`}>
                          <div className="w-10 min-w-10 shrink-0 flex justify-end">
@@ -365,14 +366,14 @@ export default function GlobalChat() {
              </div>
            </div>
         ) : (
-           <div className="flex-1 overflow-y-auto w-full custom-scrollbar flex flex-col p-6 space-y-5">
+           <div className="flex-1 min-h-0 overflow-y-auto w-full custom-scrollbar flex flex-col p-6 space-y-5">
                {dmMessages.length === 0 ? (
                  <div className="flex items-center justify-center h-32 text-zinc-500">Diga um oi para {activeDmUser?.username}!</div>
                ) : (
                  <>
                    {dmMessages.map((msg, index) => {
                      const showHeader = index === 0 || dmMessages[index - 1].senderId !== msg.senderId;
-                     const msgTime = new Date(msg.createdAt?.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                     const msgTime = msg.createdAt?.seconds ? new Date(msg.createdAt.seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Agora';
                      return (
                        <div key={msg.id} className={`flex gap-4 ${!showHeader ? 'mt-1' : ''} max-w-full group`}>
                          <div className="w-10 min-w-10 shrink-0 flex justify-end">

@@ -19,6 +19,7 @@ import Privacy from './components/legal/Privacy';
 import AdminPanel from './components/admin/AdminPainel';
 import SupportTicketModal from './components/ui/SupportTicketModal';
 import TicketDetails from './components/ui/TicketDetails';
+import MaintenanceScreen from './components/MaintenanceScreen';
 
 import GlobalChat from './components/GlobalChat';
 
@@ -28,6 +29,25 @@ export default function App() {
   const [appState, setAppState] = useState<AppState>('landing');
   const [userData, setUserData] = useState<any>(null);
   const [callData, setCallData] = useState<{roomId: string, isCaller: boolean} | null>(null);
+  const [isMaintenance, setIsMaintenance] = useState(false);
+  const currentUser = auth.currentUser;
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
+      if (docSnap.exists() && docSnap.data().maintenanceMode) {
+        setIsMaintenance(true);
+      } else {
+        setIsMaintenance(false);
+      }
+    });
+    return unsub;
+  }, []);
+
+  const isAdmin = currentUser?.uid === 'XfWanDGXhHbfz9ahH6N11I9UunG3';
+
+  if (isMaintenance && !isAdmin) {
+    return <MaintenanceScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-bg-main text-text-main selection:bg-blurple/30 font-sans overflow-x-hidden">

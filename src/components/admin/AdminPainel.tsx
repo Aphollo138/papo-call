@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Users, Ticket, ShieldAlert, ShieldCheck, CheckCircle, ArrowLeft, Loader2, Search, X } from 'lucide-react';
 import { auth, db } from '../../firebase';
-import { collection, query, where, getDocs, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, updateDoc, getDoc, setDoc } from 'firebase/firestore';
 import TicketDetails from '../ui/TicketDetails';
 
 interface AdminPanelProps {
@@ -11,12 +11,13 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ onNavigate }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'tickets'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'tickets' | 'settings'>('users');
   const [users, setUsers] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   
   // Ticket Details State
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
@@ -66,6 +67,12 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
       const ticketsQ = query(collection(db, 'tickets'), where('status', '==', 'open'));
       const ticketsSnap = await getDocs(ticketsQ);
       setTickets(ticketsSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+      // Fetch Settings
+      const settingsDoc = await getDoc(doc(db, 'settings', 'global'));
+      if (settingsDoc.exists()) {
+        setMaintenanceMode(settingsDoc.data().maintenanceMode || false);
+      }
     } catch (error) {
       console.error("Erro ao buscar dados do admin:", error);
     } finally {
@@ -159,6 +166,19 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
       setTickets(tickets.filter(t => t.id !== ticketId));
     } catch (error) {
       console.error("Erro ao resolver ticket:", error);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleMaintenance = async () => {
+    setActionLoading('maintenance');
+    try {
+      const newMode = !maintenanceMode;
+      await setDoc(doc(db, 'settings', 'global'), { maintenanceMode: newMode }, { merge: true });
+      setMaintenanceMode(newMode);
+    } catch (error) {
+      console.error("Erro ao alterar modo manutenção:", error);
     } finally {
       setActionLoading(null);
     }
@@ -319,6 +339,81 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
         )}
       </AnimatePresence>
 
+      {/* Suspend Modal */}
+      <AnimatePresence>
+        {suspendModalOpen && userToSuspend && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="w-full max-w-md bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden relative"
+            >
+              <button 
+                onClick={() => setSuspendModalOpen(false)} 
+                className="absolute top-4 right-4 p-1 text-zinc-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                    <ShieldAlert className="w-5 h-5 text-yellow-500" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white leading-tight">Suspender Usuário</h2>
+                    <p className="text-sm text-zinc-400">@{userToSuspend.username || 'user'}</p>
+                  </div>
+                </div>
+                
+                <form onSubmit={confirmSuspend} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Tempo de Suspensão</label>
+                    <select
+                      value={suspendDuration}
+                      onChange={(e) => setSuspendDuration(Number(e.target.value))}
+                      className="w-full bg-zinc-950 border border-white/5 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value={60000}>1 minuto</option>
+                      <option value={600000}>10 minutos</option>
+                      <option value={3600000}>1 hora</option>
+                      <option value={86400000}>24 horas</option>
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Motivo da Suspensão</label>
+                    <input
+                      type="text"
+                      value={suspendReason}
+                      onChange={(e) => setSuspendReason(e.target.value)}
+                      className="w-full bg-zinc-950 border border-white/5 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition-all"
+                      placeholder="Ex: Spam no chat"
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button"
+                      onClick={() => setSuspendModalOpen(false)}
+                      className="flex-1 py-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-semibold transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={actionLoading === userToSuspend.id || !suspendReason.trim()}
+                      className="flex-1 py-3 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-semibold transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {actionLoading === userToSuspend.id ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Confirmar Suspensão'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <div className="w-full md:w-64 bg-zinc-900 border-b md:border-b-0 md:border-r border-white/5 p-6 flex flex-col shrink-0">
         <div className="flex items-center gap-3 mb-10">
@@ -350,6 +445,14 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                 {tickets.length}
               </span>
             )}
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('settings')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${activeTab === 'settings' ? 'bg-[#5865F2] text-white' : 'hover:bg-white/5 text-zinc-400 hover:text-zinc-200'}`}
+          >
+            <ShieldAlert className="w-5 h-5" />
+            <span className="font-medium">Servidor</span>
           </button>
         </nav>
 
@@ -501,6 +604,33 @@ export default function AdminPanel({ onNavigate }: AdminPanelProps) {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-white">Configurações do Servidor</h2>
+              <div className="bg-zinc-900 border border-white/5 rounded-2xl p-6">
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                   <div>
+                      <h3 className="text-lg font-medium text-white mb-1">Modo Manutenção</h3>
+                      <p className="text-sm text-zinc-400 max-w-xl">
+                         Ative o modo de manutenção para bloquear o acesso de todos os usuários (exceto administradores) ao site. Uma tela de manutenção será exibida.
+                      </p>
+                   </div>
+                   <button
+                      onClick={handleToggleMaintenance}
+                      disabled={actionLoading === 'maintenance'}
+                      className={`relative shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition-all ${
+                         maintenanceMode 
+                           ? 'bg-red-500 hover:bg-red-600 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]'
+                           : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300'
+                      }`}
+                   >
+                     {actionLoading === 'maintenance' ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                     {maintenanceMode ? 'Desativar Manutenção' : 'Ativar Manutenção'}
+                   </button>
+                </div>
+              </div>
             </div>
           )}
         </motion.div>

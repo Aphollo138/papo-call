@@ -28,6 +28,7 @@ export default function GlobalChat() {
   
   // Mobile Toggles
   const [showMobileLeft, setShowMobileLeft] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const currentUser = auth.currentUser;
@@ -186,7 +187,8 @@ export default function GlobalChat() {
       const modResult = await response.json();
       
       if (modResult.blocked) {
-         alert('⚠️ Mensagem bloqueada: ' + modResult.reason);
+         setErrorMessage('Mensagem bloqueada: ' + modResult.reason);
+         setTimeout(() => setErrorMessage(''), 5000);
          setNewMessage('');
          setCooldown(30); // Penalty cooldown
          return;
@@ -203,6 +205,8 @@ export default function GlobalChat() {
       setCooldown(4); // 4 seconds delay
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
+      setErrorMessage("Erro de conexão ao enviar mensagem.");
+      setTimeout(() => setErrorMessage(''), 5000);
     } finally {
       setSending(false);
     }
@@ -284,7 +288,8 @@ export default function GlobalChat() {
       const modResult = await response.json();
       
       if (modResult.blocked) {
-         alert('⚠️ Mensagem bloqueada: ' + modResult.reason);
+         setErrorMessage('Mensagem bloqueada: ' + modResult.reason);
+         setTimeout(() => setErrorMessage(''), 5000);
          setNewDmMessage('');
          setCooldown(30);
          return;
@@ -311,6 +316,8 @@ export default function GlobalChat() {
        setNewDmMessage('');
     } catch (error) {
        console.error("Erro ao enviar DM: ", error);
+       setErrorMessage("Erro de conexão ao enviar mensagem.");
+       setTimeout(() => setErrorMessage(''), 5000);
     } finally {
        setSendingDm(false);
     }
@@ -521,6 +528,12 @@ export default function GlobalChat() {
         )}
 
         <div className="p-4 bg-[#1e1e1e] border-t border-white/5 shrink-0">
+          {errorMessage && (
+            <div className="mb-2 px-3 py-2 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-lg flex items-center justify-between">
+              <span className="flex items-center gap-2"><AlertCircle className="w-4 h-4" /> {errorMessage}</span>
+              <button type="button" onClick={() => setErrorMessage('')} className="text-red-400 hover:text-red-300">×</button>
+            </div>
+          )}
           <form onSubmit={currentView === 'global' ? handleSendMessage : handleSendDm} className="flex gap-3 bg-[#2a2a2a] rounded-lg px-2 py-2 items-end">
             <textarea
               value={currentView === 'global' ? newMessage : newDmMessage}

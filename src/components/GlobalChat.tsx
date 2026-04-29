@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Send, Loader2, Smile, MessagesSquare, MessageCircle, AlertCircle, Info, Link as LinkIcon, Users, ArrowLeft, MessageSquare, Menu } from 'lucide-react';
+import { Send, Loader2, Smile, MessagesSquare, MessageCircle, AlertCircle, Info, Link as LinkIcon, Users, ArrowLeft, MessageSquare, Menu, Trash2 } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, limit, getDocs, doc, setDoc, where, updateDoc, getDoc } from 'firebase/firestore';
+import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, limit, getDocs, doc, setDoc, where, updateDoc, getDoc, arrayRemove } from 'firebase/firestore';
 
 export default function GlobalChat() {
   const [messages, setMessages] = useState<any[]>([]);
@@ -33,6 +33,55 @@ export default function GlobalChat() {
   const currentUser = auth.currentUser;
 
   useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      let suspicious = false;
+      if (e.key === 'F12') suspicious = true;
+      if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) suspicious = true;
+      if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) suspicious = true;
+
+      if (suspicious && currentUser) {
+        try {
+          await fetch('/api/moderate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'devtools',
+              userId: currentUser.uid,
+              username: currentUser.displayName || 'Usuário',
+              content: 'Atalhos detectados: ' + (e.key === 'F12' ? 'F12' : `Ctrl+Shift+${e.key}`)
+            })
+          });
+        } catch (error) {
+          console.error('Error reporting suspicious activity', error);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // DOM Manipulation Heuristics (watching for suspicious style changes or script injections)
+    const observer = new MutationObserver((mutations) => {
+      let suspicious = false;
+      mutations.forEach((mutation) => {
+        if (mutation.addedNodes.length > 0) {
+          mutation.addedNodes.forEach((node) => {
+            if (node.nodeName === 'SCRIPT' || (node as HTMLElement).style?.position === 'fixed' && (node as HTMLElement).style?.zIndex === '999999') {
+              suspicious = true;
+            }
+          });
+        }
+      });
+      if (suspicious && currentUser) {
+        fetch('/api/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'devtools', userId: currentUser.uid, username: currentUser.displayName || 'Usuário', content: 'Manipulação anormal do DOM detectada (Possível script injetado)' })
+        }).catch(console.error);
+      }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+
     // Listen to messages
     const q = query(
       collection(db, 'global_messages'),
@@ -57,6 +106,8 @@ export default function GlobalChat() {
     return () => {
       unsub();
       unsubUsers();
+      window.removeEventListener('keydown', handleKeyDown);
+      observer.disconnect();
     };
   }, []);
 
@@ -122,6 +173,25 @@ export default function GlobalChat() {
 
     setSending(true);
     try {
+      const response = await fetch('/api/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chat',
+          userId: currentUser.uid,
+          username: currentUser.displayName || 'Usuário',
+          content: newMessage.trim()
+        })
+      });
+      const modResult = await response.json();
+      
+      if (modResult.blocked) {
+         alert('⚠️ Mensagem bloqueada: ' + modResult.reason);
+         setNewMessage('');
+         setCooldown(30); // Penalty cooldown
+         return;
+      }
+
       await addDoc(collection(db, 'global_messages'), {
         text: newMessage.trim(),
         senderId: currentUser.uid,
@@ -201,6 +271,25 @@ export default function GlobalChat() {
     const messagesRef = collection(db, 'direct_chats', dmChatId, 'messages');
 
     try {
+      const response = await fetch('/api/moderate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'chat',
+          userId: currentUser.uid,
+          username: currentUser.displayName || 'Usuário',
+          content: newDmMessage.trim()
+        })
+      });
+      const modResult = await response.json();
+      
+      if (modResult.blocked) {
+         alert('⚠️ Mensagem bloqueada: ' + modResult.reason);
+         setNewDmMessage('');
+         setCooldown(30);
+         return;
+      }
+
        const myData = await getDoc(doc(db, 'users', currentUser.uid)).then(s => ({ username: s.data()?.username, photoURL: s.data()?.photoURL }));
        await setDoc(chatRef, {
           participants: [currentUser.uid, activeDmUser.id],
@@ -224,6 +313,23 @@ export default function GlobalChat() {
        console.error("Erro ao enviar DM: ", error);
     } finally {
        setSendingDm(false);
+    }
+  };
+
+  const handleDeleteDm = async (e: React.MouseEvent, chatId: string, otherUserId: string) => {
+    e.stopPropagation();
+    if (!currentUser) return;
+    try {
+      const chatRef = doc(db, 'direct_chats', chatId);
+      await updateDoc(chatRef, {
+        participants: arrayRemove(currentUser.uid)
+      });
+      if (activeDmUser?.id === otherUserId) {
+        setCurrentView('global');
+        setActiveDmUser(null);
+      }
+    } catch (error) {
+      console.error("Erro ao deletar DM: ", error);
     }
   };
 
@@ -275,7 +381,7 @@ export default function GlobalChat() {
                   const otherUser = chat.usersData?.[otherUserId] || { username: 'Usuário' };
                   const isActive = currentView === 'dm' && activeDmUser?.id === otherUserId;
                   return (
-                     <div key={chat.id} onClick={() => handleStartDm({ id: otherUserId, username: otherUser.username, photoURL: otherUser.photoUrl })} className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}>
+                     <div key={chat.id} onClick={() => handleStartDm({ id: otherUserId, username: otherUser.username, photoURL: otherUser.photoUrl })} className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}>
                         {otherUser.photoUrl ? (
                            <img src={otherUser.photoUrl} alt="Avatar" className="w-8 h-8 rounded-full object-cover shrink-0" />
                         ) : (
@@ -283,10 +389,17 @@ export default function GlobalChat() {
                              {otherUser.username.charAt(0).toUpperCase()}
                            </div>
                         )}
-                        <div className="flex flex-col min-w-0">
+                        <div className="flex flex-col min-w-0 flex-1 pr-6">
                            <span className={`text-sm font-medium truncate ${isActive ? 'text-white' : 'text-zinc-300'}`}>{otherUser.username}</span>
                            <span className="text-[10px] text-zinc-400 truncate">{chat.lastMessage}</span>
                         </div>
+                        <button
+                          onClick={(e) => handleDeleteDm(e, chat.id, otherUserId)}
+                          className={`absolute right-2 p-1.5 rounded-md transition-all ${isActive ? 'opacity-100 text-zinc-400 hover:text-red-400 hover:bg-red-500/10' : 'opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-red-500 hover:bg-red-500/10'}`}
+                          title="Apagar conversa"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                      </div>
                   )
                })}

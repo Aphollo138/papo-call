@@ -53,13 +53,16 @@ export default function MaintenanceScreen() {
       {/* Running Cat Area */}
       <div className="absolute bottom-10 right-0 w-full overflow-hidden h-48 pointer-events-none">
         
-        {/* Cat Container moving left to right */}
+        {/* Cat Container bouncing left and right */}
         <motion.div 
-          className="absolute bottom-4 left-0 w-32 h-32 flex items-center justify-center drop-shadow-[0_0_25px_rgba(168,85,247,0.4)]"
-          initial={{ x: "-100vw" }}
-          animate={{ x: "100vw" }}
+          className="absolute bottom-4 left-0 w-48 h-32 flex items-center justify-center drop-shadow-[0_0_25px_rgba(168,85,247,0.4)]"
+          animate={{ 
+            x: ["-20vw", "110vw", "110vw", "-20vw", "-20vw"],
+            scaleX: [1, 1, -1, -1, 1] 
+          }}
           transition={{ 
-            duration: 8, 
+            duration: 12, 
+            times: [0, 0.45, 0.5, 0.95, 1],
             repeat: Infinity,
             ease: "linear"
           }}
@@ -86,17 +89,17 @@ export default function MaintenanceScreen() {
 
           {/* Running Cat Emoji with bounce/run animation */}
           <motion.div 
-            className="text-[100px] leading-none transform rotate-12 scale-x-110"
+            className="transform rotate-12"
             animate={{ 
-              y: [0, -20, 0],
+              y: [0, -15, 0],
               rotate: [12, 18, 12]
             }}
             transition={{
-              duration: 0.3,
+              duration: 0.25,
               repeat: Infinity,
             }}
           >
-            😺
+            <i className="fa-solid fa-cat text-[80px]" style={{ color: 'rgb(116, 192, 252)' }}></i>
           </motion.div>
 
         </motion.div>

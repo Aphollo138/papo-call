@@ -174,17 +174,25 @@ export default function GlobalChat() {
 
     setSending(true);
     try {
-      const response = await fetch('/api/moderate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'chat',
-          userId: currentUser.uid,
-          username: currentUser.displayName || 'Usuário',
-          content: newMessage.trim()
-        })
-      });
-      const modResult = await response.json();
+      let modResult = { blocked: false, reason: '' };
+      try {
+        const response = await fetch('/api/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'chat',
+            userId: currentUser.uid,
+            username: currentUser.displayName || 'Usuário',
+            content: newMessage.trim()
+          })
+        });
+        const text = await response.text();
+        if (text) {
+          modResult = JSON.parse(text);
+        }
+      } catch (e) {
+        console.warn("Moderação offline ou erro na API:", e);
+      }
       
       if (modResult.blocked) {
          setErrorMessage('Mensagem bloqueada: ' + modResult.reason);
@@ -275,17 +283,25 @@ export default function GlobalChat() {
     const messagesRef = collection(db, 'direct_chats', dmChatId, 'messages');
 
     try {
-      const response = await fetch('/api/moderate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'chat',
-          userId: currentUser.uid,
-          username: currentUser.displayName || 'Usuário',
-          content: newDmMessage.trim()
-        })
-      });
-      const modResult = await response.json();
+      let modResult = { blocked: false, reason: '' };
+      try {
+        const response = await fetch('/api/moderate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'chat',
+            userId: currentUser.uid,
+            username: currentUser.displayName || 'Usuário',
+            content: newDmMessage.trim()
+          })
+        });
+        const text = await response.text();
+        if (text) {
+          modResult = JSON.parse(text);
+        }
+      } catch (e) {
+        console.warn("Moderação offline ou erro na API:", e);
+      }
       
       if (modResult.blocked) {
          setErrorMessage('Mensagem bloqueada: ' + modResult.reason);

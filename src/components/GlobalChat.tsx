@@ -11,7 +11,23 @@ export default function GlobalChat() {
   const [sending, setSending] = useState(false);
   const [activeUsers, setActiveUsers] = useState<any[]>([]);
   const [showUsersList, setShowUsersList] = useState(window.innerWidth >= 1280);
-  const [cooldown, setCooldown] = useState(0);
+  const [cooldown, setCooldownState] = useState(() => {
+    const saved = localStorage.getItem('globalChatCooldown');
+    if (saved) {
+      const remaining = Math.ceil((parseInt(saved) - Date.now()) / 1000);
+      return remaining > 0 ? remaining : 0;
+    }
+    return 0;
+  });
+
+  const setCooldown = (seconds: number) => {
+    setCooldownState(seconds);
+    if (seconds > 0) {
+      localStorage.setItem('globalChatCooldown', (Date.now() + seconds * 1000).toString());
+    } else {
+      localStorage.removeItem('globalChatCooldown');
+    }
+  };
 
   // Right sidebar and Profile State
   const [rightView, setRightView] = useState<'users' | 'profile'>('users');
@@ -162,11 +178,19 @@ export default function GlobalChat() {
 
   // Cooldown timer
   useEffect(() => {
-    if (cooldown > 0) {
-      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [cooldown]);
+    const interval = setInterval(() => {
+      setCooldownState((prev) => {
+        const saved = localStorage.getItem('globalChatCooldown');
+        if (saved) {
+          const remaining = Math.ceil((parseInt(saved) - Date.now()) / 1000);
+          if (remaining > 0) return remaining;
+          localStorage.removeItem('globalChatCooldown');
+        }
+        return 0;
+      });
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();

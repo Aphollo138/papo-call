@@ -1,9 +1,12 @@
 import React, { useEffect, Suspense, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
-import { Canvas, useLoader, useFrame } from '@react-three/fiber';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
-import { OrbitControls, Stage } from '@react-three/drei';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { OrbitControls, Stage, useFBX } from '@react-three/drei';
+// Se for usar OBJ + MTL ao invés de FBX, você usaria:
+// import { useLoader } from '@react-three/fiber';
+// import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+// import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 
 class SimpleErrorBoundary extends React.Component<{ fallback: React.ReactNode, children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: any) {
@@ -20,17 +23,19 @@ class SimpleErrorBoundary extends React.Component<{ fallback: React.ReactNode, c
 }
 
 function Cat3DModel() {
-  const obj = useLoader(OBJLoader, '/public/gatinho.obj');
-  const catRef = useRef<any>(null);
+  // === PARA USAR ARQUIVO .FBX (RECOMENDADO DENTRE ESSES) ===
+  const fbx = useFBX('/public/gatinho.FBX');
+  
+  // Modelos FBX geralmente vêm MUITO grandes, então se não aparecer redimensione o scale (ex: scale={0.01})
+  return <primitive object={fbx} scale={0.01} />;
 
-  useFrame(() => {
-    // optional: add small wiggle or animation in 3d space if needed
-    // it will be translated left and right by the motion.div wrapper anyway
-  });
-
-  return (
-    <primitive object={obj} ref={catRef} />
-  );
+  // === SE PREFERIR USAR ARQUIVO .OBJ + .MTL, USE O CÓDIGO ABAIXO: ===
+  // const materials = useLoader(MTLLoader, '/gatinho.mtl');
+  // const obj = useLoader(OBJLoader, '/gatinho.obj', (loader: any) => {
+  //   materials.preload();
+  //   loader.setMaterials(materials);
+  // });
+  // return <primitive object={obj} />;
 }
 
 export default function MaintenanceScreen() {

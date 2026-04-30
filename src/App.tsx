@@ -411,7 +411,7 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }} 
-      className="h-screen w-full bg-zinc-950 flex flex-col relative overflow-hidden"
+      className="h-[100dvh] w-full bg-zinc-950 flex flex-col relative overflow-hidden overscroll-none"
     >
       {/* Active Tab Content */}
       {activeTab === 'match' && (
@@ -690,74 +690,74 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
       </AnimatePresence>
 
       {/* Bottom Navigation Bar */}
-      <div className="fixed z-30 bottom-6 left-4 right-4 md:bottom-0 md:left-0 md:right-0 md:w-full bg-white/5 md:bg-zinc-950/80 backdrop-blur-2xl md:backdrop-blur-xl border border-white/10 md:border-x-0 md:border-b-0 md:border-t md:border-white/5 rounded-3xl md:rounded-none px-2 md:px-0 py-2 md:pb-6 md:pt-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)] md:shadow-none max-w-md mx-auto">
-        <div className="flex items-center justify-between md:justify-around gap-2 h-16 px-2 md:max-w-md md:mx-auto">
+      <div className="fixed z-30 bottom-2 md:bottom-0 left-4 right-4 md:left-0 md:right-0 md:w-full bg-zinc-900/70 md:bg-zinc-950/80 backdrop-blur-3xl md:backdrop-blur-xl border border-white/10 md:border-x-0 md:border-b-0 md:border-t md:border-white/5 rounded-[2rem] md:rounded-none px-6 md:px-0 py-3 md:pb-6 md:pt-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)] md:shadow-none max-w-md mx-auto mb-[env(safe-area-inset-bottom)] md:mb-0">
+        <div className="flex items-center justify-between md:justify-around gap-2 h-12 md:h-16 md:max-w-md md:mx-auto">
           {/* Button 1: Suporte */}
           <button 
             onClick={() => setActiveTab('support')}
-            className={`flex flex-col items-center justify-center w-16 md:w-20 gap-1 transition-colors ${activeTab === 'support' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`flex flex-col items-center justify-center md:w-20 gap-1 transition-all ${activeTab === 'support' ? 'text-white scale-110' : 'text-zinc-400 hover:text-zinc-300'}`}
           >
-            <Headphones className="w-6 h-6" />
-            <span className="text-[10px] font-medium leading-none whitespace-nowrap">Suporte</span>
+            <Headphones className="w-6 h-6 md:w-6 md:h-6" />
+            <span className="hidden md:block text-[10px] font-medium leading-none whitespace-nowrap">Suporte</span>
           </button>
 
           {/* Button 2: Match Real */}
           <button 
             onClick={searching ? handleCancelSearch : handleSearch}
-            className="flex flex-col items-center justify-center w-20 md:w-24 gap-1 relative group -mt-6"
+            className="flex flex-col items-center justify-center md:w-24 gap-1 relative group md:-mt-6"
           >
             <div className="relative flex items-center justify-center">
               {searching && (
                 <>
-                  <motion.div className="absolute inset-0 rounded-full bg-[#5865F2]/40" animate={{ scale: [1, 1.5, 2], opacity: [0.8, 0.4, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }} />
-                  <motion.div className="absolute inset-0 rounded-full bg-[#5865F2]/40" animate={{ scale: [1, 1.5, 2], opacity: [0.8, 0.4, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 1 }} />
+                  <motion.div className="absolute inset-0 rounded-2xl md:rounded-full bg-[#5865F2]/40" animate={{ scale: [1, 1.3, 1.8], opacity: [0.8, 0.4, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }} />
+                  <motion.div className="absolute inset-0 rounded-2xl md:rounded-full bg-[#5865F2]/40" animate={{ scale: [1, 1.3, 1.8], opacity: [0.8, 0.4, 0] }} transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 1 }} />
                 </>
               )}
-              <div className={`w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-all duration-300 z-10 ${searching ? 'bg-zinc-800 border-2 border-[#5865F2] shadow-[0_0_20px_rgba(88,101,242,0.4)]' : 'bg-[#5865F2] group-active:scale-95 shadow-[0_0_15px_rgba(88,101,242,0.4)]'}`}>
+              <div className={`w-14 h-10 md:w-16 md:h-16 rounded-2xl md:rounded-full flex items-center justify-center transition-all duration-300 z-10 ${searching ? 'bg-zinc-800 border-2 border-[#5865F2] shadow-[0_0_20px_rgba(88,101,242,0.4)]' : 'bg-white/10 md:bg-[#5865F2] group-active:scale-95 md:shadow-[0_0_15px_rgba(88,101,242,0.4)] hover:bg-white/20 md:hover:bg-[#6f7bf7]'}`}>
                 {searching ? (
-                  <Zap className="w-7 h-7 md:w-8 md:h-8 text-[#5865F2] animate-pulse" />
+                  <Zap className="w-6 h-6 md:w-8 md:h-8 text-[#5865F2] animate-pulse" />
                 ) : (
-                  <Zap className="w-7 h-7 md:w-8 md:h-8 text-white" />
+                  <Zap className="w-6 h-6 md:w-8 md:h-8 text-white" />
                 )}
               </div>
             </div>
-            <span className={`text-[10px] font-medium leading-none mt-1 whitespace-nowrap ${searching ? 'text-[#5865F2]' : 'text-zinc-300'}`}>Match Real</span>
+            <span className={`hidden md:block text-[10px] font-medium leading-none mt-1 whitespace-nowrap ${searching ? 'text-[#5865F2]' : 'text-zinc-300'}`}>Match Real</span>
           </button>
 
           {/* Button 3: Comunidade */}
           <button 
             onClick={() => setActiveTab('community')}
-            className={`flex flex-col items-center justify-center w-16 md:w-20 gap-1 transition-colors ${activeTab === 'community' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`flex flex-col items-center justify-center md:w-20 gap-1 transition-all ${activeTab === 'community' ? 'text-white scale-110' : 'text-zinc-400 hover:text-zinc-300'}`}
           >
-            <Users className="w-6 h-6" />
-            <span className="text-[10px] font-medium leading-none whitespace-nowrap">Comunidade</span>
+            <Users className="w-6 h-6 md:w-6 md:h-6" />
+            <span className="hidden md:block text-[10px] font-medium leading-none whitespace-nowrap">Comunidade</span>
           </button>
 
           {/* Button 4: Global */}
           <button 
             onClick={() => setActiveTab('global')}
-            className={`flex flex-col items-center justify-center w-16 md:w-20 gap-1 transition-colors ${activeTab === 'global' ? 'text-white' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`flex flex-col items-center justify-center md:w-20 gap-1 transition-all ${activeTab === 'global' ? 'text-white scale-110' : 'text-zinc-400 hover:text-zinc-300'}`}
           >
-            <Globe className="w-6 h-6" />
-            <span className="text-[10px] font-medium leading-none whitespace-nowrap">Global</span>
+            <Globe className="w-6 h-6 md:w-6 md:h-6" />
+            <span className="hidden md:block text-[10px] font-medium leading-none whitespace-nowrap">Global</span>
           </button>
 
           {/* Button 5: Perfil (Mobile Only) */}
           <button 
             onClick={() => setShowMobileProfile(true)}
-            className="md:hidden flex flex-col items-center justify-center w-16 gap-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="md:hidden flex flex-col items-center justify-center gap-1 text-zinc-400 hover:text-zinc-300 transition-all active:scale-95"
           >
             <div className="relative">
-              <div className="w-6 h-6 rounded-full bg-zinc-800 overflow-hidden flex items-center justify-center border border-zinc-700">
+              <div className="w-7 h-7 rounded-sm bg-zinc-800 overflow-hidden flex items-center justify-center border-2 border-transparent">
                 {userData?.photoURL || currentUser?.photoURL ? (
                   <img src={userData?.photoURL || currentUser?.photoURL || ''} alt="Profile" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-xs font-bold text-zinc-400">{currentUser?.displayName?.charAt(0).toUpperCase() || 'U'}</span>
+                  <span className="text-[10px] font-bold text-zinc-400">{currentUser?.displayName?.charAt(0).toUpperCase() || 'U'}</span>
                 )}
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-zinc-950 rounded-full"></div>
+              <div className="absolute -bottom-1 -right-1 w-2.5 h-2.5 bg-green-500 border-2 border-zinc-950 rounded-full"></div>
             </div>
-            <span className="text-[10px] font-medium leading-none whitespace-nowrap">Perfil</span>
+            <span className="hidden text-[10px] font-medium leading-none whitespace-nowrap">Perfil</span>
           </button>
         </div>
       </div>

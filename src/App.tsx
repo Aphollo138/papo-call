@@ -690,8 +690,8 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
       </AnimatePresence>
 
       {/* Bottom Navigation Bar */}
-      <div className="fixed bottom-0 w-full bg-zinc-950/80 backdrop-blur-xl border-t border-white/5 pb-6 pt-2 z-30">
-        <div className="flex items-center justify-around h-16 px-2 max-w-md mx-auto">
+      <div className="fixed z-30 bottom-6 left-4 right-4 md:bottom-0 md:left-0 md:right-0 md:w-full bg-white/5 md:bg-zinc-950/80 backdrop-blur-2xl md:backdrop-blur-xl border border-white/10 md:border-x-0 md:border-b-0 md:border-t md:border-white/5 rounded-3xl md:rounded-none px-2 md:px-0 py-2 md:pb-6 md:pt-2 shadow-[0_8px_32px_rgba(0,0,0,0.4)] md:shadow-none max-w-md mx-auto">
+        <div className="flex items-center justify-between md:justify-around gap-2 h-16 px-2 md:max-w-md md:mx-auto">
           {/* Button 1: Suporte */}
           <button 
             onClick={() => setActiveTab('support')}

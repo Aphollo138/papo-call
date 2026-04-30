@@ -29,7 +29,8 @@ function Cat3DModel() {
   
   // O scale de 0.05 é para evitar que um modelo original venha enorme.
   // Você pode alterar esse valor de scale conforme necessário.
-  return <primitive object={obj} scale={0.05} />;
+  // Rotação para a direita (Y: Math.PI / 2 = 90 graus)
+  return <primitive object={obj} scale={0.05} rotation={[0, Math.PI / 2, 0]} />;
 }
 
 export default function MaintenanceScreen() {
@@ -83,16 +84,13 @@ export default function MaintenanceScreen() {
       {/* Running Cat Area */}
       <div className="absolute bottom-10 right-0 w-full overflow-hidden h-48 pointer-events-none">
         
-        {/* Cat Container bouncing left and right */}
+        {/* Cat Container pointing right always */}
         <motion.div 
-          className="absolute bottom-4 left-0 w-48 h-32 flex items-center justify-center drop-shadow-[0_0_25px_rgba(168,85,247,0.4)]"
-          animate={{ 
-            x: ["-20vw", "110vw", "110vw", "-20vw", "-20vw"],
-            scaleX: [1, 1, -1, -1, 1] 
-          }}
+          className="absolute bottom-4 left-0 w-40 h-32 md:w-56 md:h-48 flex items-center justify-center drop-shadow-[0_0_25px_rgba(168,85,247,0.4)]"
+          initial={{ x: "-20vw" }}
+          animate={{ x: "120vw" }}
           transition={{ 
-            duration: 12, 
-            times: [0, 0.45, 0.5, 0.95, 1],
+            duration: 8, 
             repeat: Infinity,
             ease: "linear"
           }}
@@ -130,16 +128,16 @@ export default function MaintenanceScreen() {
             }}
           >
             <SimpleErrorBoundary fallback={<i className="fa-solid fa-cat text-[80px]" style={{ color: 'rgb(116, 192, 252)' }}></i>}>
-              <div className="w-[120px] h-[120px]">
+              <div className="w-[120px] h-[120px] md:w-[180px] md:h-[180px]">
                 <Canvas camera={{ position: [0, 2, 5], fov: 45 }} gl={{ alpha: true }}>
                   <ambientLight intensity={0.6} />
                   <directionalLight position={[10, 10, 5]} intensity={1} />
                   <Suspense fallback={null}>
-                    <Stage environment="city" intensity={0.6} adjustCamera>
+                    <Stage environment="city" intensity={0.6} adjustCamera preset="rembrandt">
                       <Cat3DModel />
                     </Stage>
                   </Suspense>
-                  <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={5} />
+                  <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
                 </Canvas>
               </div>
             </SimpleErrorBoundary>

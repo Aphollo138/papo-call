@@ -1,12 +1,10 @@
 import React, { useEffect, Suspense, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
-import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Stage, useFBX } from '@react-three/drei';
-// Se for usar OBJ + MTL ao invés de FBX, você usaria:
-// import { useLoader } from '@react-three/fiber';
-// import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-// import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
+import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { OrbitControls, Stage } from '@react-three/drei';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 
 class SimpleErrorBoundary extends React.Component<{ fallback: React.ReactNode, children: React.ReactNode }, { hasError: boolean }> {
   constructor(props: any) {
@@ -23,19 +21,15 @@ class SimpleErrorBoundary extends React.Component<{ fallback: React.ReactNode, c
 }
 
 function Cat3DModel() {
-  // === PARA USAR ARQUIVO .FBX (RECOMENDADO DENTRE ESSES) ===
-  const fbx = useFBX('/public/gatinho.FBX');
+  const materials = useLoader(MTLLoader, '/gatinho.mtl');
+  const obj = useLoader(OBJLoader, '/gatinho.obj', (loader: any) => {
+    materials.preload();
+    loader.setMaterials(materials);
+  });
   
-  // Modelos FBX geralmente vêm MUITO grandes, então se não aparecer redimensione o scale (ex: scale={0.01})
-  return <primitive object={fbx} scale={0.01} />;
-
-  // === SE PREFERIR USAR ARQUIVO .OBJ + .MTL, USE O CÓDIGO ABAIXO: ===
-  // const materials = useLoader(MTLLoader, '/gatinho.mtl');
-  // const obj = useLoader(OBJLoader, '/gatinho.obj', (loader: any) => {
-  //   materials.preload();
-  //   loader.setMaterials(materials);
-  // });
-  // return <primitive object={obj} />;
+  // O scale de 0.05 é para evitar que um modelo original venha enorme.
+  // Você pode alterar esse valor de scale conforme necessário.
+  return <primitive object={obj} scale={0.05} />;
 }
 
 export default function MaintenanceScreen() {

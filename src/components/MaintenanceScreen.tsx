@@ -1,6 +1,37 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, Suspense, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
+import { Canvas, useLoader, useFrame } from '@react-three/fiber';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
+import { OrbitControls, Stage } from '@react-three/drei';
+
+class SimpleErrorBoundary extends React.Component<{ fallback: React.ReactNode, children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true };
+  }
+  render() {
+    if (this.state.hasError) return this.props.fallback;
+    return this.props.children;
+  }
+}
+
+function Cat3DModel() {
+  const obj = useLoader(OBJLoader, '/public/gatinho.obj');
+  const catRef = useRef<any>(null);
+
+  useFrame(() => {
+    // optional: add small wiggle or animation in 3d space if needed
+    // it will be translated left and right by the motion.div wrapper anyway
+  });
+
+  return (
+    <primitive object={obj} ref={catRef} />
+  );
+}
 
 export default function MaintenanceScreen() {
   // Option: small protection against F12, even though data won't leak
@@ -89,7 +120,7 @@ export default function MaintenanceScreen() {
 
           {/* Running Cat Emoji with bounce/run animation */}
           <motion.div 
-            className="transform rotate-12"
+            className="transform rotate-12 flex items-center justify-center"
             animate={{ 
               y: [0, -15, 0],
               rotate: [12, 18, 12]
@@ -99,7 +130,20 @@ export default function MaintenanceScreen() {
               repeat: Infinity,
             }}
           >
-            <i className="fa-solid fa-cat text-[80px]" style={{ color: 'rgb(116, 192, 252)' }}></i>
+            <SimpleErrorBoundary fallback={<i className="fa-solid fa-cat text-[80px]" style={{ color: 'rgb(116, 192, 252)' }}></i>}>
+              <div className="w-[120px] h-[120px]">
+                <Canvas camera={{ position: [0, 2, 5], fov: 45 }} gl={{ alpha: true }}>
+                  <ambientLight intensity={0.6} />
+                  <directionalLight position={[10, 10, 5]} intensity={1} />
+                  <Suspense fallback={null}>
+                    <Stage environment="city" intensity={0.6} adjustCamera>
+                      <Cat3DModel />
+                    </Stage>
+                  </Suspense>
+                  <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={5} />
+                </Canvas>
+              </div>
+            </SimpleErrorBoundary>
           </motion.div>
 
         </motion.div>

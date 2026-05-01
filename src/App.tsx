@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { 
   Headphones, UserCheck, ShieldCheck, Twitter, Github, Linkedin, 
   Volume2, Mic, MicOff, PhoneOff, User, Loader2, Search, Activity, Hash, ArrowRight, Link as LinkIcon,
-  Lock, Eye, EyeOff, Settings, Users, Zap, X, Heart, MessageSquare, ShieldAlert, Globe
+  Lock, Eye, EyeOff, Settings, Users, Zap, X, Heart, MessageSquare, ShieldAlert, Globe, Mail
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from 'firebase/auth';
@@ -16,7 +16,7 @@ import Community from './components/Community';
 import SettingsModal from './components/ui/SettingsModal';
 import Terms from './components/legal/Terms';
 import Privacy from './components/legal/Privacy';
-import AdminPanel from './components/admin/AdminPainel';
+import AdminPanel from './components/admin/AdminPanel';
 import SupportTicketModal from './components/ui/SupportTicketModal';
 import TicketDetails from './components/ui/TicketDetails';
 import MaintenanceScreen from './components/MaintenanceScreen';
@@ -89,131 +89,164 @@ export default function App() {
 // --- LANDING PAGE ---
 function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, key?: string }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex flex-col">
-      <header className="border-b border-white/5 bg-bg-main/80 backdrop-blur-md sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex flex-col bg-[#111214]">
+      <header className="absolute top-0 w-full z-50 bg-transparent pt-6 md:pt-8">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-white rounded-xl flex items-center justify-center p-1.5 shadow-md">
-              <img src="https://i.postimg.cc/jDfHpdjL/image.png" alt="Papos Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+            <div className="w-12 h-12 flex items-center justify-center p-1">
+              <img src="https://i.postimg.cc/jDfHpdjL/image.png" alt="Papos Logo" className="w-full h-full object-contain brightness-0 invert" referrerPolicy="no-referrer" />
             </div>
-            <span className="text-2xl font-bold tracking-tight text-white">Papos</span>
+            <span className="text-3xl font-black tracking-tight text-white">Papos</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#recursos" className="text-sm font-medium text-text-muted hover:text-text-main transition-colors">Recursos</a>
-            <a href="#seguranca" className="text-sm font-medium text-text-muted hover:text-text-main transition-colors">Segurança</a>
-            <a href="#baixar" className="text-sm font-medium text-text-muted hover:text-text-main transition-colors">Baixar</a>
+            <a href="#recursos" className="text-sm font-bold text-white hover:underline transition-colors">Recursos</a>
+            <a href="#seguranca" className="text-sm font-bold text-white hover:underline transition-colors">Segurança</a>
+            <a href="#comunidade" className="text-sm font-bold text-white hover:underline transition-colors">Comunidade</a>
           </nav>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <button onClick={() => onNavigate('login')} className="text-sm font-medium px-3 py-2 rounded-md text-text-main hover:text-white hover:bg-white/5 transition-colors cursor-pointer">
-              Entrar
-            </button>
-            <button onClick={() => onNavigate('register')} className="text-sm font-medium px-4 py-2 rounded-md bg-blurple hover:bg-blurple-hover text-white transition-colors cursor-pointer shadow-lg shadow-blurple/20">
-              Cadastrar
+          <div className="flex items-center gap-4">
+            <button onClick={() => onNavigate('login')} className="text-sm font-medium px-5 py-2.5 rounded-full bg-white text-[#2B2D31] hover:bg-gray-200 transition-colors cursor-pointer shadow-sm">
+              Login
             </button>
           </div>
         </div>
       </header>
 
-      <section className="relative pt-24 pb-20 px-6 overflow-hidden flex-grow">
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 text-balance">
-            Apenas voz. Conversas reais.
+      <section className="relative pt-40 md:pt-56 pb-32 md:pb-64 px-6 overflow-hidden bg-[#0d0e11] flex-shrink-0">
+        
+        {/* Panela - Background Desfocada */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none overflow-hidden">
+            <div className="absolute top-[20%] right-[5%] w-[80vw] max-w-[900px] h-[80vw] max-h-[900px] blur-[80px] md:blur-[120px] opacity-30 md:opacity-40 bg-center bg-no-repeat bg-contain mix-blend-screen" style={{ backgroundImage: "url('https://i.postimg.cc/nMCPFGGM/image.png')" }}></div>
+            <div className="absolute bottom-[20%] left-[5%] w-[60vw] max-w-[700px] h-[60vw] max-h-[700px] blur-[60px] md:blur-[100px] opacity-20 md:opacity-30 bg-center bg-no-repeat bg-contain mix-blend-screen transform -rotate-12" style={{ backgroundImage: "url('https://i.postimg.cc/nMCPFGGM/image.png')" }}></div>
+            <div className="absolute top-[10%] left-[20%] w-[40vw] max-w-[400px] h-[40vw] max-h-[400px] blur-[80px] opacity-20 bg-center bg-no-repeat bg-contain mix-blend-screen transform rotate-45" style={{ backgroundImage: "url('https://i.postimg.cc/nMCPFGGM/image.png')" }}></div>
+        </div>
+
+        {/* Discord-like Wave at the bottom */}
+        <div className="absolute bottom-[-2px] left-0 w-full overflow-hidden leading-none z-10">
+          <svg className="relative block w-full h-[100px] md:h-[200px]" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none">
+             <path fill="#111214" fillOpacity="1" d="M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+          </svg>
+        </div>
+
+        {/* Floating Icons */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          <motion.i animate={{ y: [0, -15, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }} className="fa-solid fa-cloud absolute top-[25%] left-[5%] text-[80px] md:text-[120px] text-white/5" />
+          <motion.i animate={{ y: [0, 20, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 1 }} className="fa-solid fa-gamepad absolute top-[55%] right-[8%] text-[70px] md:text-[100px] text-white/5" />
+          <motion.i animate={{ y: [0, -25, 0], rotate: [-10, 10, -10] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 2 }} className="fa-solid fa-headphones absolute bottom-[25%] md:bottom-[35%] left-[10%] text-[100px] md:text-[140px] text-white/5" />
+          <motion.i animate={{ y: [0, 15, 0] }} transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 0.5 }} className="fa-solid fa-comments absolute top-[30%] right-[22%] text-[60px] md:text-[90px] text-white/5" />
+          <motion.i animate={{ y: [0, -20, 0] }} transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 1.5 }} className="fa-solid fa-star absolute bottom-[20%] md:bottom-[40%] right-[15%] text-[50px] md:text-[70px] text-yellow-300/10" />
+          <motion.i animate={{ y: [0, 30, 0] }} transition={{ duration: 7.5, repeat: Infinity, ease: "easeInOut", delay: 3 }} className="fa-solid fa-rocket absolute top-[15%] left-[25%] text-[70px] md:text-[90px] text-white/5" />
+          <motion.i animate={{ y: [0, -20, 0] }} transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut", delay: 2.5 }} className="fa-solid fa-music absolute bottom-[15%] md:bottom-[30%] left-[30%] text-[40px] md:text-[60px] text-white/5" />
+        </div>
+
+        <div className="max-w-5xl mx-auto text-center relative z-20">
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: "easeOut" }} className="text-4xl sm:text-5xl md:text-[70px] lg:text-[80px] font-black tracking-tight text-white mb-6 md:mb-10 text-balance leading-[1.1] font-['Arial',sans-serif]">
+            IMAGINE UM LUGAR...
           </motion.h1>
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-lg md:text-xl text-text-muted mb-10 max-w-2xl mx-auto leading-relaxed text-balance">
-            Entre, fale e ouça. O Papos remove as distrações visuais e o texto para focar no que importa: a conexão instantânea através do áudio.
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7, ease: "easeOut" }} className="text-base sm:text-lg md:text-xl text-white/90 mb-10 md:mb-14 max-w-3xl mx-auto leading-relaxed text-balance font-medium">
+            ...onde você possa pertencer a uma comunidade ativa, encontrar novas amizades pelo mundo todo através da sua voz. Segurança, diversão e conexão instantânea.
           </motion.p>
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <button onClick={() => onNavigate('register')} className="px-8 py-4 rounded-lg bg-blurple hover:bg-blurple-hover text-white font-semibold text-lg transition-colors cursor-pointer inline-flex items-center gap-2">
-              Começar a Falar
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.7, ease: "easeOut" }} className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-8 md:mt-12">
+            <button onClick={() => onNavigate('register')} className="w-full sm:w-auto px-8 md:px-10 py-4 md:py-5 rounded-full bg-white hover:bg-gray-100 text-[#2B2D31] font-medium text-lg transition-all hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-3">
+              <i className="fa-solid fa-user-plus text-lg"></i>
+              Começar Agora
+            </button>
+            <button onClick={() => onNavigate('login')} className="w-full sm:w-auto px-8 md:px-10 py-4 md:py-5 rounded-full bg-[#2B2D31] hover:bg-[#1e1f22] text-white font-medium text-lg transition-all border border-transparent hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-3">
+              Entrar no Papos
             </button>
           </motion.div>
         </div>
-        <div className="mt-20 max-w-3xl mx-auto flex items-center justify-center gap-1 h-32 opacity-80">
-          {[...Array(40)].map((_, i) => {
-            const height = 20 + Math.sin(i * 0.5) * 40 + Math.cos(i * 0.2) * 20 + Math.random() * 20;
-            return (
-              <motion.div key={i} className="w-2 rounded-full bg-gradient-to-t from-blurple to-blue-400"
-                animate={{ height: [height, height * 0.4, height * 1.2, height] }}
-                transition={{ duration: 1.5 + Math.random() * 1, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 0.5 }}
-              />
-            );
-          })}
-        </div>
       </section>
 
-      <section id="recursos" className="py-24 px-6 bg-bg-main">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-          <FeatureCard icon={<img src="https://img.icons8.com/?size=100&id=qlWqQuEnMw4W&format=png&color=5865F2" alt="Áudio" className="w-6 h-6 object-contain" referrerPolicy="no-referrer" />} title="Áudio de Alta Fidelidade" description="Latência zero e cancelamento de ruído nativo para conversas cristalinas." />
-          <FeatureCard icon={<UserCheck className="w-6 h-6 text-blurple" />} title="Entrada Simplificada" description="Sem e-mails longos. Apenas Nome, Usuário e Senha para começar." />
-          <FeatureCard icon={<img src="https://img.icons8.com/?size=100&id=83198&format=png&color=5865F2" alt="Privacidade" className="w-6 h-6 object-contain" referrerPolicy="no-referrer" />} title="Foco na Privacidade" description="Suas salas, suas regras. Sem chats de texto persistentes, o áudio é efêmero." />
-        </div>
-      </section>
-
-      <section className="py-24 px-6 bg-[#000000] border-t border-white/5 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-12">A organização que você conhece, focada em áudio</h2>
+      {/* Section 1 - Chat Global */}
+      <section id="features-cards" className="py-32 px-6 bg-[#111214]">
+        <div className="max-w-7xl mx-auto flex flex-col gap-32">
           
-          {/* Call Container */}
-          <div className="bg-[#111214] rounded-2xl p-4 md:p-6 border border-white/5 shadow-2xl max-w-4xl mx-auto">
-            {/* Grid of users */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              
-              {/* User 1 (Active Speaker) */}
-              <div className="bg-[#2B2D31] rounded-xl aspect-video relative flex items-center justify-center overflow-hidden border-2 border-green shadow-[0_0_15px_rgba(34,197,94,0.15)]">
-                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#2B2D31] relative z-10">
-                  <img src="https://i.pravatar.cc/150?img=11" alt="Alex" className="w-full h-full object-cover" />
-                </div>
-                {/* Active speaker pulse */}
-                <motion.div className="absolute w-24 h-24 rounded-full border-2 border-green" animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0, 0.8] }} transition={{ duration: 1.5, repeat: Infinity }} />
-                
-                {/* Name Tag */}
-                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-md flex items-center gap-2">
-                  <span className="text-white text-sm font-medium">Alex</span>
-                  <Volume2 className="w-4 h-4 text-green" />
-                </div>
-              </div>
-
-              {/* User 2 */}
-              <div className="bg-[#2B2D31] rounded-xl aspect-video relative flex items-center justify-center overflow-hidden border-2 border-transparent">
-                <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-[#2B2D31]">
-                  <img src="https://i.pravatar.cc/150?img=32" alt="Sarah" className="w-full h-full object-cover" />
-                </div>
-                
-                {/* Name Tag */}
-                <div className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-md flex items-center gap-2">
-                  <span className="text-white text-sm font-medium">Sarah</span>
-                </div>
-              </div>
-
+          {/* Card 1 - Chat Global */}
+          <div className="bg-[#1e1f22] border border-white/5 rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 md:gap-20 relative overflow-hidden shadow-2xl">
+            <div className="flex-1 text-center md:text-left z-10">
+              <h2 className="text-3xl md:text-[42px] lg:text-[48px] font-black text-white mb-6 leading-tight font-['Arial',sans-serif]">
+                Um Chat Global para todos
+              </h2>
+              <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium">
+                Conecte-se com a comunidade instantaneamente. Troque mensagens de texto, compartilhe interesses e conheça novas pessoas a qualquer momento em um ambiente vibrante.
+              </p>
             </div>
-
-            {/* Call Controls */}
-            <div className="flex items-center justify-center gap-4">
-              <button className="w-12 h-12 rounded-full bg-[#2B2D31] hover:bg-[#313338] flex items-center justify-center transition-colors text-white">
-                <Mic className="w-5 h-5" />
-              </button>
-              <button className="w-12 h-12 rounded-full bg-[#2B2D31] hover:bg-[#313338] flex items-center justify-center transition-colors text-white">
-                <Headphones className="w-5 h-5" />
-              </button>
-              <button className="w-12 h-12 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center transition-colors text-white shadow-lg shadow-red-500/20">
-                <PhoneOff className="w-5 h-5" />
-              </button>
+            <div className="flex-1 w-full relative z-10">
+               <div className="relative">
+                 <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full"></div>
+                 <img src="https://i.postimg.cc/rpyX33DY/chat-global.png" alt="Chat Global" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+               </div>
             </div>
           </div>
+
+          {/* Card 2 - Comunidade */}
+          <div className="bg-[#1e1f22] border border-white/5 rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 md:gap-20 relative overflow-hidden shadow-2xl">
+            <div className="flex-1 w-full order-2 md:order-1 relative z-10">
+               <div className="relative">
+                 <div className="absolute inset-0 bg-fuchsia-500/20 blur-[100px] rounded-full"></div>
+                 <img src="https://i.postimg.cc/fbWnppVr/comunidade.png" alt="Comunidade" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+               </div>
+            </div>
+            <div className="flex-1 text-center md:text-left order-1 md:order-2 z-10">
+              <h2 className="text-3xl md:text-[42px] lg:text-[48px] font-black text-white mb-6 leading-tight font-['Arial',sans-serif]">
+                O seu espaço na comunidade
+              </h2>
+              <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium">
+                Crie seu perfil, adicione seus interesses e conecte-se com pessoas incríveis. Um ambiente totalmente pensado para você se expressar e encontrar novas amizades.
+              </p>
+            </div>
+          </div>
+
+          {/* Card 3 - Calls/Match Real */}
+          <div className="bg-[#1e1f22] border border-white/5 rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 md:gap-20 relative overflow-hidden shadow-2xl">
+            <div className="flex-1 text-center md:text-left z-10">
+              <h2 className="text-3xl md:text-[42px] lg:text-[48px] font-black text-white mb-6 leading-tight font-['Arial',sans-serif]">
+                Onde é fácil conversar por voz
+              </h2>
+              <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium">
+                Descreva-se, entre em calls seguras de áudio e faça um "Match Real". Sem distrações visuais, foque apenas na qualidade da conversa no momento da conexão.
+              </p>
+            </div>
+            <div className="flex-1 w-full relative z-10">
+               <div className="relative">
+                 <div className="absolute inset-0 bg-yellow-500/20 blur-[100px] rounded-full"></div>
+                 <img src="https://i.postimg.cc/R0P5BdtQ/call.png" alt="Calls" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+               </div>
+            </div>
+          </div>
+
+          {/* Card 4 - Support/Tickets */}
+          <div className="bg-[#1e1f22] border border-white/5 rounded-[40px] p-8 md:p-16 flex flex-col md:flex-row items-center gap-12 md:gap-20 relative overflow-hidden shadow-2xl">
+            <div className="flex-1 w-full order-2 md:order-1 relative z-10">
+               <div className="relative">
+                 <div className="absolute inset-0 bg-green-500/20 blur-[100px] rounded-full"></div>
+                 <img src="https://i.postimg.cc/MGs2S5Bm/suporte.png" alt="Suporte via Ticket" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+               </div>
+            </div>
+            <div className="flex-1 text-center md:text-left order-1 md:order-2 z-10">
+              <h2 className="text-3xl md:text-[42px] lg:text-[48px] font-black text-white mb-6 leading-tight font-['Arial',sans-serif]">
+                Suporte sempre presente
+              </h2>
+              <p className="text-lg md:text-xl text-white/80 leading-relaxed font-medium">
+                Precisa de ajuda ou quer reportar algo? Nosso sistema de tickets garante que você seja atendido rapidamente, mantendo a comunidade sempre segura e organizada para todos.
+              </p>
+            </div>
+          </div>
+
         </div>
       </section>
 
-      <footer className="border-t border-white/5 py-12 px-6 bg-bg-main">
+      <footer className="border-t border-white/5 py-12 px-6 bg-[#09090b]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-white/90 rounded-md flex items-center justify-center p-1 opacity-70 hover:opacity-100 transition-opacity">
-              <img src="https://i.postimg.cc/jDfHpdjL/image.png" alt="Papos Logo" className="w-full h-full object-contain grayscale" referrerPolicy="no-referrer" />
+            <div className="w-8 h-8 flex items-center justify-center grayscale opacity-80 hover:opacity-100 transition-opacity">
+              <img src="https://i.postimg.cc/jDfHpdjL/image.png" alt="Papos Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
             </div>
-            <span className="text-lg font-bold text-text-muted">Papos</span>
+            <span className="text-lg font-bold text-zinc-500">Papos</span>
           </div>
           <div className="flex items-center gap-6">
-            <button onClick={() => onNavigate('terms')} className="text-sm text-text-muted hover:text-white transition-colors">Termos</button>
-            <button onClick={() => onNavigate('privacy')} className="text-sm text-text-muted hover:text-white transition-colors">Privacidade</button>
+            <button onClick={() => onNavigate('terms')} className="text-sm font-medium text-zinc-500 hover:text-white transition-colors">Termos do Serviço</button>
+            <button onClick={() => onNavigate('privacy')} className="text-sm font-medium text-zinc-500 hover:text-white transition-colors">Privacidade</button>
           </div>
         </div>
       </footer>

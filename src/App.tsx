@@ -16,7 +16,7 @@ import Community from './components/Community';
 import SettingsModal from './components/ui/SettingsModal';
 import Terms from './components/legal/Terms';
 import Privacy from './components/legal/Privacy';
-import AdminPanel from './components/admin/AdminPanel';
+import AdminPanel from './components/admin/AdminPainel';
 import SupportTicketModal from './components/ui/SupportTicketModal';
 import TicketDetails from './components/ui/TicketDetails';
 import MaintenanceScreen from './components/MaintenanceScreen';

@@ -29,12 +29,40 @@ import BlogPost from './components/blog/BlogPost';
 type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin' | 'blog_list' | 'blog_post';
 
 export default function App() {
-  const [appState, setAppState] = useState<AppState>('landing');
+  const getInitialState = (): { state: AppState, slug?: string } => {
+    const path = window.location.pathname;
+    if (path === '/blog') return { state: 'blog_list' };
+    if (path.startsWith('/blog/')) {
+      const slug = path.replace('/blog/', '');
+      return { state: 'blog_post', slug };
+    }
+    return { state: 'landing' };
+  };
+
+  const initial = getInitialState();
+  const [appState, setAppState] = useState<AppState>(initial.state);
   const [userData, setUserData] = useState<any>(null);
   const [callData, setCallData] = useState<{roomId: string, isCaller: boolean} | null>(null);
-  const [blogSlug, setBlogSlug] = useState<string>('');
+  const [blogSlug, setBlogSlug] = useState<string>(initial.slug || '');
   const [isMaintenance, setIsMaintenance] = useState(false);
   const currentUser = auth.currentUser;
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/blog') {
+        setAppState('blog_list');
+      } else if (path.startsWith('/blog/')) {
+        setBlogSlug(path.replace('/blog/', ''));
+        setAppState('blog_post');
+      } else if (path === '/' || path === '') {
+        setAppState('landing');
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'settings', 'global'), (docSnap) => {
@@ -56,6 +84,11 @@ export default function App() {
   const handleNavigate = (state: AppState, data?: any) => {
     if (state === 'blog_post' && data?.slug) {
       setBlogSlug(data.slug);
+      window.history.pushState({}, '', `/blog/${data.slug}`);
+    } else if (state === 'blog_list') {
+      window.history.pushState({}, '', '/blog');
+    } else {
+      window.history.pushState({}, '', '/');
     }
     setAppState(state);
   };

@@ -22,13 +22,17 @@ import TicketDetails from './components/ui/TicketDetails';
 import MaintenanceScreen from './components/MaintenanceScreen';
 
 import GlobalChat from './components/GlobalChat';
+import PublicHeader from './components/blog/PublicHeader';
+import BlogList from './components/blog/BlogList';
+import BlogPost from './components/blog/BlogPost';
 
-type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin';
+type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin' | 'blog_list' | 'blog_post';
 
 export default function App() {
   const [appState, setAppState] = useState<AppState>('landing');
   const [userData, setUserData] = useState<any>(null);
   const [callData, setCallData] = useState<{roomId: string, isCaller: boolean} | null>(null);
+  const [blogSlug, setBlogSlug] = useState<string>('');
   const [isMaintenance, setIsMaintenance] = useState(false);
   const currentUser = auth.currentUser;
 
@@ -49,38 +53,47 @@ export default function App() {
     return <MaintenanceScreen />;
   }
 
+  const handleNavigate = (state: AppState, data?: any) => {
+    if (state === 'blog_post' && data?.slug) {
+      setBlogSlug(data.slug);
+    }
+    setAppState(state);
+  };
+
   return (
     <div className="min-h-screen bg-bg-main text-text-main selection:bg-blurple/30 font-sans overflow-x-hidden">
       <AnimatePresence mode="wait">
-        {appState === 'landing' && <LandingPage onNavigate={setAppState} key="landing" />}
+        {appState === 'landing' && <LandingPage onNavigate={handleNavigate} key="landing" />}
         {appState === 'login' && <Login onLogin={(data) => {
           setUserData(data);
           if (data.profileComplete === false) {
-            setAppState('profile');
+            handleNavigate('profile');
           } else {
-            setAppState('dashboard');
+            handleNavigate('dashboard');
           }
-        }} onNavigate={setAppState} key="login" />}
+        }} onNavigate={handleNavigate} key="login" />}
         {appState === 'register' && (
           <Register 
-            onNext={(data) => { setUserData(data); setAppState('profile'); }} 
-            onBack={() => setAppState('landing')} 
-            onNavigate={setAppState}
+            onNext={(data) => { setUserData(data); handleNavigate('profile'); }} 
+            onBack={() => handleNavigate('landing')} 
+            onNavigate={handleNavigate}
             key="register" 
           />
         )}
         {appState === 'profile' && (
           <CompleteProfile 
             userData={userData} 
-            onComplete={() => setAppState('dashboard')} 
+            onComplete={() => handleNavigate('dashboard')} 
             key="profile" 
           />
         )}
-        {appState === 'dashboard' && <Dashboard onMatch={(roomId, isCaller) => { setCallData({roomId, isCaller}); setAppState('call'); }} onNavigate={setAppState} key="dashboard" />}
-        {appState === 'call' && callData && <CallInterface roomId={callData.roomId} isCaller={callData.isCaller} onLeave={() => { setCallData(null); setAppState('dashboard'); }} key="call" />}
-        {appState === 'terms' && <Terms onBack={() => setAppState('landing')} key="terms" />}
-        {appState === 'privacy' && <Privacy onBack={() => setAppState('landing')} key="privacy" />}
-        {appState === 'admin' && <AdminPanel onNavigate={setAppState} key="admin" />}
+        {appState === 'dashboard' && <Dashboard onMatch={(roomId, isCaller) => { setCallData({roomId, isCaller}); handleNavigate('call'); }} onNavigate={handleNavigate} key="dashboard" />}
+        {appState === 'call' && callData && <CallInterface roomId={callData.roomId} isCaller={callData.isCaller} onLeave={() => { setCallData(null); handleNavigate('dashboard'); }} key="call" />}
+        {appState === 'terms' && <Terms onBack={() => handleNavigate('landing')} key="terms" />}
+        {appState === 'privacy' && <Privacy onBack={() => handleNavigate('landing')} key="privacy" />}
+        {appState === 'admin' && <AdminPanel onNavigate={handleNavigate} key="admin" />}
+        {appState === 'blog_list' && <BlogList onNavigate={handleNavigate} key="blog_list" />}
+        {appState === 'blog_post' && <BlogPost slug={blogSlug} onNavigate={handleNavigate} key="blog_post" />}
       </AnimatePresence>
     </div>
   );
@@ -90,26 +103,7 @@ export default function App() {
 function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, key?: string }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="min-h-screen flex flex-col bg-[#111214]">
-      <header className="absolute top-0 w-full z-50 bg-transparent pt-6 md:pt-8">
-        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 flex items-center justify-center p-1">
-              <img src="https://i.postimg.cc/jDfHpdjL/image.png" alt="Papos Logo" className="w-full h-full object-contain brightness-0 invert" referrerPolicy="no-referrer" />
-            </div>
-            <span className="text-3xl font-black tracking-tight text-white">Papos</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <a href="#recursos" className="text-sm font-bold text-white hover:underline transition-colors">Recursos</a>
-            <a href="#seguranca" className="text-sm font-bold text-white hover:underline transition-colors">Segurança</a>
-            <a href="#comunidade" className="text-sm font-bold text-white hover:underline transition-colors">Comunidade</a>
-          </nav>
-          <div className="flex items-center gap-4">
-            <button onClick={() => onNavigate('login')} className="text-sm font-medium px-5 py-2.5 rounded-full bg-white text-[#2B2D31] hover:bg-gray-200 transition-colors cursor-pointer shadow-sm">
-              Login
-            </button>
-          </div>
-        </div>
-      </header>
+      <PublicHeader onNavigate={onNavigate} activePath="home" />
 
       <section className="relative pt-40 md:pt-56 pb-32 md:pb-64 px-6 overflow-hidden bg-[#0d0e11] flex-shrink-0">
         
@@ -514,7 +508,9 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
                   <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-[#111214] rounded-full"></div>
                 </div>
                 <div className="mt-12">
-                  <h2 className="text-lg font-bold text-white leading-tight">{currentUser?.displayName || 'Usuário'}</h2>
+                  <h2 className="text-lg font-bold text-white leading-tight">
+                    {currentUser?.displayName || 'Usuário'}
+                  </h2>
                   <p className="text-sm text-zinc-400">@{currentUser?.displayName?.toLowerCase().replace(/\s+/g, '') || 'usuario'}</p>
                 </div>
                 {userData?.bio && (
@@ -582,7 +578,9 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-zinc-900 rounded-full"></div>
           </div>
           <div className="relative z-10 flex flex-col items-start text-left flex-1 overflow-hidden">
-            <span className="text-sm font-bold text-white leading-tight truncate w-full drop-shadow-md">{currentUser?.displayName || 'Usuário'}</span>
+            <span className="text-sm font-bold text-white leading-tight truncate w-full drop-shadow-md">
+              {currentUser?.displayName || 'Usuário'}
+            </span>
             <span className="text-[11px] text-zinc-300 leading-tight mt-0.5 truncate w-full drop-shadow-md">Online</span>
           </div>
           <Settings className="relative z-10 w-4 h-4 text-zinc-400 shrink-0 group-hover:text-white transition-colors drop-shadow-md" />
@@ -677,7 +675,9 @@ function Dashboard({ onMatch, onNavigate }: { onMatch: (roomId: string, isCaller
                 <div className="absolute bottom-1.5 right-1.5 w-5 h-5 bg-green-500 border-4 border-zinc-950 rounded-full"></div>
               </div>
               <div className="mt-16">
-                <h2 className="text-2xl font-bold text-white leading-tight">{currentUser?.displayName || 'Usuário'}</h2>
+                <h2 className="text-2xl font-bold text-white leading-tight">
+                  {currentUser?.displayName || 'Usuário'}
+                </h2>
                 <p className="text-base text-zinc-400">@{currentUser?.displayName?.toLowerCase().replace(/\s+/g, '') || 'usuario'}</p>
               </div>
               

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Heart, Loader2, Smile, Trash2 } from 'lucide-react';
-import EmojiPicker, { Theme } from 'emoji-picker-react';
+const EmojiPicker = React.lazy(() => import('emoji-picker-react'));
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, arrayRemove, arrayUnion, deleteDoc } from 'firebase/firestore';
 
@@ -118,14 +118,16 @@ export default function Community() {
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     className="absolute z-50 mt-2 left-0"
                   >
-                    <EmojiPicker 
-                      onEmojiClick={onEmojiClick}
-                      theme={Theme.DARK}
-                      searchDisabled={true}
-                      skinTonesDisabled={true}
-                      width={300}
-                      height={350}
-                    />
+                    <React.Suspense fallback={<div className="bg-zinc-900 border border-white/10 rounded-xl p-4 w-[300px] h-[350px] flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-zinc-500" /></div>}>
+                      <EmojiPicker 
+                        onEmojiClick={onEmojiClick}
+                        theme={"dark" as any}
+                        searchDisabled={true}
+                        skinTonesDisabled={true}
+                        width={300}
+                        height={350}
+                      />
+                    </React.Suspense>
                   </motion.div>
                 )}
               </AnimatePresence>

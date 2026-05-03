@@ -399,7 +399,7 @@ export default function GlobalChat() {
         <div className="p-6 border-b border-white/5 flex flex-col items-center justify-center">
           <div className="relative mb-3">
             {currentUser?.photoURL ? (
-               <img src={currentUser.photoURL} alt="Você" className="w-20 h-20 rounded-full object-cover shadow-lg border-2 border-[#1e1e1e]" />
+               <img src={currentUser.photoURL} alt="Você" loading="lazy" width={80} height={80} className="w-20 h-20 rounded-full object-cover shadow-lg border-2 border-[#1e1e1e]" />
             ) : (
                <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold text-white bg-[#5865F2] shadow-lg">
                  {currentUser?.displayName?.charAt(0).toUpperCase() || 'U'}
@@ -430,7 +430,7 @@ export default function GlobalChat() {
                   return (
                      <div key={chat.id} onClick={() => handleStartDm({ id: otherUserId, username: otherUser.username, photoURL: otherUser.photoUrl })} className={`group relative flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${isActive ? 'bg-white/10' : 'hover:bg-white/5'}`}>
                         {otherUser.photoUrl ? (
-                           <img src={otherUser.photoUrl} alt="Avatar" className="w-8 h-8 rounded-full object-cover shrink-0" />
+                           <img src={otherUser.photoUrl} alt="Avatar" loading="lazy" width={32} height={32} className="w-8 h-8 rounded-full object-cover shrink-0" />
                         ) : (
                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${getAvatarColor(otherUser.username)}`}>
                              {otherUser.username.charAt(0).toUpperCase()}
@@ -540,7 +540,7 @@ export default function GlobalChat() {
                            {showHeader ? (
                              <button onClick={() => handleOpenProfile(msg)} className="w-10 h-10 rounded-full overflow-hidden shadow-sm hover:ring-2 hover:ring-[#5865F2] transition-all">
                                {msg.senderPhotoUrl ? (
-                                  <img src={msg.senderPhotoUrl} alt="Avatar" className="w-full h-full object-cover" />
+                                  <img src={msg.senderPhotoUrl} alt="Avatar" loading="lazy" width={40} height={40} className="w-full h-full object-cover" />
                                ) : (
                                   <div className={`w-full h-full flex items-center justify-center text-white font-bold ${getAvatarColor(msg.senderName)}`}>{msg.senderName.charAt(0).toUpperCase()}</div>
                                )}
@@ -618,7 +618,7 @@ export default function GlobalChat() {
                       {u.bannerUrl && <div className="absolute inset-0 opacity-10 bg-cover bg-center" style={{ backgroundImage: `url(${u.bannerUrl})` }} />}
                       <div className="relative shrink-0 z-10">
                         {u.photoURL ? (
-                          <img src={u.photoURL} alt="Avatar" className="w-9 h-9 rounded-full object-cover border border-white/10" />
+                          <img src={u.photoURL} alt="Avatar" loading="lazy" width={36} height={36} className="w-9 h-9 rounded-full object-cover border border-white/10" />
                         ) : (
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm ${getAvatarColor(u.username || 'U')}`}>{(u.username || 'U').charAt(0).toUpperCase()}</div>
                         )}
@@ -636,14 +636,14 @@ export default function GlobalChat() {
              <div className="flex-1 overflow-y-auto flex flex-col pt-0 relative custom-scrollbar bg-[#18181b]">
                 <button onClick={() => setRightView('users')} className="absolute top-4 left-4 w-8 h-8 rounded-full bg-black/60 shadow-lg text-white flex items-center justify-center z-20 hover:bg-black/80 transition-colors"> <ArrowLeft className="w-4 h-4" /> </button>
                 {selectedUser?.bannerUrl ? (
-                  <div className="h-32 w-full bg-cover bg-center shrink-0" style={{ backgroundImage: `url(${selectedUser.bannerUrl})` }} />
+                  <div className="h-32 w-full bg-cover bg-center shrink-0" style={{ backgroundImage: `url(${selectedUser.bannerUrl})`, backgroundPosition: `center ${selectedUser?.bannerPosition || 50}%` }} />
                 ) : (
-                  <div className="h-32 w-full bg-[#5865F2] shrink-0" />
+                  <div className="h-32 w-full bg-[#5865F2]" />
                 )}
                 <div className="px-5 pb-5 -mt-12 relative z-10 flex flex-col items-center text-center">
                     <div className="relative mb-3">
                         {selectedUser?.photoURL || selectedUser?.senderPhotoUrl ? (
-                           <img src={selectedUser.photoURL || selectedUser.senderPhotoUrl} alt="Avatar" className="w-24 h-24 rounded-full object-cover border-[6px] border-[#18181b] shadow-xl bg-zinc-800" />
+                           <img src={selectedUser.photoURL || selectedUser.senderPhotoUrl} alt="Avatar" loading="lazy" width={96} height={96} className="w-24 h-24 rounded-full object-cover border-[6px] border-[#18181b] shadow-xl bg-zinc-800" />
                         ) : (
                            <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold border-[6px] border-[#18181b] shadow-xl bg-zinc-800 ${getAvatarColor(selectedUser?.username || selectedUser?.senderName || 'U')}`}>
                               {(selectedUser?.username || selectedUser?.senderName || 'U').charAt(0).toUpperCase()}
@@ -651,8 +651,10 @@ export default function GlobalChat() {
                         )}
                         <div className="absolute bottom-2 right-2 w-5 h-5 bg-green-500 rounded-full border-[3px] border-[#18181b]"></div>
                     </div>
-                    <h3 className="text-xl font-bold text-white leading-tight">{selectedUser?.username || selectedUser?.senderName || 'Usuário'}</h3>
-                    <p className="text-zinc-400 text-sm mt-3 px-2 leading-relaxed">{selectedUser?.about || 'Nenhuma biografia disponível no momento.'}</p>
+                    <h3 className="text-xl font-bold text-white leading-tight">
+                      {selectedUser?.username || selectedUser?.senderName || 'Usuário'}
+                    </h3>
+                    <p className="text-zinc-400 text-sm mt-3 px-2 leading-relaxed">{selectedUser?.about || selectedUser?.bio || 'Nenhuma biografia disponível no momento.'}</p>
                     
                     {selectedUser?.id !== currentUser?.uid && selectedUser?.senderId !== currentUser?.uid && (
                        <button onClick={() => handleStartDm(selectedUser)} className="mt-6 w-full py-2.5 rounded-xl bg-[#5865F2] hover:bg-[#6f7bf7] text-white font-medium transition-all shadow-lg hover:shadow-[#5865F2]/20 flex items-center justify-center gap-2">

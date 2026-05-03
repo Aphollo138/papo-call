@@ -1,6 +1,7 @@
 import React, { useEffect, Suspense, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Heart } from 'lucide-react';
+import { Cat } from 'lucide-react';
 import { Canvas, useFrame, useLoader } from '@react-three/fiber';
 import { OrbitControls, Stage } from '@react-three/drei';
 import { OBJLoader } from 'three-stdlib';
@@ -127,7 +128,7 @@ export default function MaintenanceScreen() {
               repeat: Infinity,
             }}
           >
-            <SimpleErrorBoundary fallback={<i className="fa-solid fa-cat text-[80px]" style={{ color: 'rgb(116, 192, 252)' }}></i>}>
+            <SimpleErrorBoundary fallback={<Cat className="text-[#74c0fc] w-20 h-20" />}>
               <div className="w-[120px] h-[120px] md:w-[180px] md:h-[180px]">
                 <Canvas camera={{ position: [0, 2, 5], fov: 45 }} gl={{ alpha: true }}>
                   <ambientLight intensity={0.6} />

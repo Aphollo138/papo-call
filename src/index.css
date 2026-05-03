@@ -11,6 +11,14 @@
   --color-green: #22C55E;
   --color-text-main: #E4E4E7;
   --color-text-muted: #949ba4;
+  
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-delayed: float 7s ease-in-out infinite 1s;
+  --animate-float-slow: float 8s ease-in-out infinite 2s;
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
 }
 
 body {

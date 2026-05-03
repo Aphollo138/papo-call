@@ -1,6 +1,28 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import admin from 'firebase-admin';
+
+// Initialize Firebase Admin
+if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+  try {
+    const serviceAccount = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString());
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    console.log("Firebase Admin initialized successfully.");
+  } catch (error) {
+    console.error("Failed to initialize Firebase Admin:", error);
+  }
+} else {
+  console.warn("FIREBASE_SERVICE_ACCOUNT_BASE64 not set, premium webhooks won't work.");
+  // Initialize without credentials if we are in an environment that supports application default credentials
+  try {
+     admin.initializeApp();
+  } catch (e) {
+     console.error("Default Firebase Admin init failed:", e);
+  }
+}
 
 const app = express();
 const PORT = 3000;
@@ -103,7 +125,16 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
-    app.use(express.static(distPath));
+    app.use(express.static(distPath, {
+      maxAge: '1y',
+      setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        } else if (filePath.match(/\.(js|css|webp|png|jpg|jpeg|gif|ico|svg|woff|woff2)$/)) {
+          res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        }
+      }
+    }));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });

@@ -108,6 +108,7 @@ function BlogCard({ post, onNavigate, index }: { post: BlogPost, onNavigate: any
         <div className="absolute inset-0 bg-[#5865F2]/20 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
         <img 
           src={post.imageUrl} 
+          loading="lazy"
           alt={post.title} 
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />

@@ -78,6 +78,7 @@ export default function BlogPost({ slug, onNavigate }: BlogPostProps) {
               <img 
                 src={post.imageUrl} 
                 alt={post.title} 
+                fetchPriority="high"
                 className="w-full h-full object-cover"
               />
             </div>

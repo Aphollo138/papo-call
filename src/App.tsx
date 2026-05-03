@@ -1,30 +1,30 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Headphones, UserCheck, ShieldCheck, Twitter, Github, Linkedin, 
-  Volume2, Mic, MicOff, PhoneOff, User, Loader2, Search, Activity, Hash, ArrowRight, Link as LinkIcon,
-  Lock, Eye, EyeOff, Settings, Users, Zap, X, Heart, MessageSquare, ShieldAlert, Globe, Mail
+  Headphones, 
+  Volume2, Mic, MicOff, PhoneOff, User, Loader2, Activity, ArrowRight,
+  Settings, Users, Zap, X, Heart, ShieldAlert, Globe
 } from 'lucide-react';
 import { auth, db } from './firebase';
 import { createUserWithEmailAndPassword, updateProfile, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc, getDocs, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, limit, deleteDoc, updateDoc, arrayRemove, arrayUnion } from 'firebase/firestore';
 
-import Login from './components/auth/Login';
-import Register from './components/auth/Register';
-import CompleteProfile from './components/auth/CompleteProfile';
-import Community from './components/Community';
-import SettingsModal from './components/ui/SettingsModal';
-import Terms from './components/legal/Terms';
-import Privacy from './components/legal/Privacy';
-import AdminPanel from './components/admin/AdminPainel';
-import SupportTicketModal from './components/ui/SupportTicketModal';
-import TicketDetails from './components/ui/TicketDetails';
-import MaintenanceScreen from './components/MaintenanceScreen';
+const Login = lazy(() => import('./components/auth/Login'));
+const Register = lazy(() => import('./components/auth/Register'));
+const CompleteProfile = lazy(() => import('./components/auth/CompleteProfile'));
+const Community = lazy(() => import('./components/Community'));
+const SettingsModal = lazy(() => import('./components/ui/SettingsModal'));
+const Terms = lazy(() => import('./components/legal/Terms'));
+const Privacy = lazy(() => import('./components/legal/Privacy'));
+const AdminPanel = lazy(() => import('./components/admin/AdminPainel'));
+const SupportTicketModal = lazy(() => import('./components/ui/SupportTicketModal'));
+const TicketDetails = lazy(() => import('./components/ui/TicketDetails'));
+const MaintenanceScreen = lazy(() => import('./components/MaintenanceScreen'));
 
-import GlobalChat from './components/GlobalChat';
+const GlobalChat = lazy(() => import('./components/GlobalChat'));
 import PublicHeader from './components/blog/PublicHeader';
-import BlogList from './components/blog/BlogList';
-import BlogPost from './components/blog/BlogPost';
+const BlogList = lazy(() => import('./components/blog/BlogList'));
+const BlogPost = lazy(() => import('./components/blog/BlogPost'));
 
 type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin' | 'blog_list' | 'blog_post';
 
@@ -95,39 +95,41 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-bg-main text-text-main selection:bg-blurple/30 font-sans overflow-x-hidden">
-      <AnimatePresence mode="wait">
-        {appState === 'landing' && <LandingPage onNavigate={handleNavigate} key="landing" />}
-        {appState === 'login' && <Login onLogin={(data) => {
-          setUserData(data);
-          if (data.profileComplete === false) {
-            handleNavigate('profile');
-          } else {
-            handleNavigate('dashboard');
-          }
-        }} onNavigate={handleNavigate} key="login" />}
-        {appState === 'register' && (
-          <Register 
-            onNext={(data) => { setUserData(data); handleNavigate('profile'); }} 
-            onBack={() => handleNavigate('landing')} 
-            onNavigate={handleNavigate}
-            key="register" 
-          />
-        )}
-        {appState === 'profile' && (
-          <CompleteProfile 
-            userData={userData} 
-            onComplete={() => handleNavigate('dashboard')} 
-            key="profile" 
-          />
-        )}
-        {appState === 'dashboard' && <Dashboard onMatch={(roomId, isCaller) => { setCallData({roomId, isCaller}); handleNavigate('call'); }} onNavigate={handleNavigate} key="dashboard" />}
-        {appState === 'call' && callData && <CallInterface roomId={callData.roomId} isCaller={callData.isCaller} onLeave={() => { setCallData(null); handleNavigate('dashboard'); }} key="call" />}
-        {appState === 'terms' && <Terms onBack={() => handleNavigate('landing')} key="terms" />}
-        {appState === 'privacy' && <Privacy onBack={() => handleNavigate('landing')} key="privacy" />}
-        {appState === 'admin' && <AdminPanel onNavigate={handleNavigate} key="admin" />}
-        {appState === 'blog_list' && <BlogList onNavigate={handleNavigate} key="blog_list" />}
-        {appState === 'blog_post' && <BlogPost slug={blogSlug} onNavigate={handleNavigate} key="blog_post" />}
-      </AnimatePresence>
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#111214]"><Loader2 className="w-8 h-8 text-[#5865F2] animate-spin" /></div>}>
+        <AnimatePresence mode="wait">
+          {appState === 'landing' && <LandingPage onNavigate={handleNavigate} key="landing" />}
+          {appState === 'login' && <Login onLogin={(data) => {
+            setUserData(data);
+            if (data.profileComplete === false) {
+              handleNavigate('profile');
+            } else {
+              handleNavigate('dashboard');
+            }
+          }} onNavigate={handleNavigate} key="login" />}
+          {appState === 'register' && (
+            <Register 
+              onNext={(data) => { setUserData(data); handleNavigate('profile'); }} 
+              onBack={() => handleNavigate('landing')} 
+              onNavigate={handleNavigate}
+              key="register" 
+            />
+          )}
+          {appState === 'profile' && (
+            <CompleteProfile 
+              userData={userData} 
+              onComplete={() => handleNavigate('dashboard')} 
+              key="profile" 
+            />
+          )}
+          {appState === 'dashboard' && <Dashboard onMatch={(roomId, isCaller) => { setCallData({roomId, isCaller}); handleNavigate('call'); }} onNavigate={handleNavigate} key="dashboard" />}
+          {appState === 'call' && callData && <CallInterface roomId={callData.roomId} isCaller={callData.isCaller} onLeave={() => { setCallData(null); handleNavigate('dashboard'); }} key="call" />}
+          {appState === 'terms' && <Terms onBack={() => handleNavigate('landing')} key="terms" />}
+          {appState === 'privacy' && <Privacy onBack={() => handleNavigate('landing')} key="privacy" />}
+          {appState === 'admin' && <AdminPanel onNavigate={handleNavigate} key="admin" />}
+          {appState === 'blog_list' && <BlogList onNavigate={handleNavigate} key="blog_list" />}
+          {appState === 'blog_post' && <BlogPost slug={blogSlug} onNavigate={handleNavigate} key="blog_post" />}
+        </AnimatePresence>
+      </Suspense>
     </div>
   );
 }
@@ -201,7 +203,7 @@ function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, ke
             <div className="flex-1 w-full relative z-10">
                <div className="relative">
                  <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full"></div>
-                 <img src="https://i.postimg.cc/rpyX33DY/chat-global.png" alt="Chat Global" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+                 <img src="https://i.postimg.cc/rpyX33DY/chat-global.png" loading="lazy" alt="Chat Global" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
                </div>
             </div>
           </div>
@@ -211,7 +213,7 @@ function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, ke
             <div className="flex-1 w-full order-2 md:order-1 relative z-10">
                <div className="relative">
                  <div className="absolute inset-0 bg-fuchsia-500/20 blur-[100px] rounded-full"></div>
-                 <img src="https://i.postimg.cc/fbWnppVr/comunidade.png" alt="Comunidade" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+                 <img src="https://i.postimg.cc/fbWnppVr/comunidade.png" loading="lazy" alt="Comunidade" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
                </div>
             </div>
             <div className="flex-1 text-center md:text-left order-1 md:order-2 z-10">
@@ -237,7 +239,7 @@ function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, ke
             <div className="flex-1 w-full relative z-10">
                <div className="relative">
                  <div className="absolute inset-0 bg-yellow-500/20 blur-[100px] rounded-full"></div>
-                 <img src="https://i.postimg.cc/R0P5BdtQ/call.png" alt="Calls" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+                 <img src="https://i.postimg.cc/R0P5BdtQ/call.png" loading="lazy" alt="Calls" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
                </div>
             </div>
           </div>
@@ -247,7 +249,8 @@ function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, ke
             <div className="flex-1 w-full order-2 md:order-1 relative z-10">
                <div className="relative">
                  <div className="absolute inset-0 bg-green-500/20 blur-[100px] rounded-full"></div>
-                 <img src="https://i.postimg.cc/MGs2S5Bm/suporte.png" alt="Suporte via Ticket" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+                 <img src="https://i.postimg.cc/MGs2S5Bm/suporte.png" loading="lazy" alt="Suporte via Ticket" className="w-full h-auto rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] object-contain relative z-20 border border-white/10" referrerPolicy="no-referrer" />
+
                </div>
             </div>
             <div className="flex-1 text-center md:text-left order-1 md:order-2 z-10">
@@ -278,16 +281,6 @@ function LandingPage({ onNavigate }: { onNavigate: (state: AppState) => void, ke
         </div>
       </footer>
     </motion.div>
-  );
-}
-
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
-  return (
-    <div className="p-6 rounded-xl bg-bg-card border border-white/5 hover:border-white/10 transition-colors flex flex-col gap-4">
-      <div className="w-12 h-12 rounded-lg bg-bg-hover flex items-center justify-center">{icon}</div>
-      <h3 className="text-lg font-semibold text-white">{title}</h3>
-      <p className="text-text-muted leading-relaxed text-sm">{description}</p>
-    </div>
   );
 }
 

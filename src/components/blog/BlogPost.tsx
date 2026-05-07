@@ -64,48 +64,59 @@ export default function BlogPost({ slug, onNavigate }: BlogPostProps) {
         </button>
 
         <article>
-          <div className="mb-10 text-center">
-            <div className="flex items-center justify-center gap-2 text-sm text-[#5865F2] font-bold mb-4 uppercase tracking-wider">
+          <div className="mb-16 text-center">
+            <div className="flex items-center justify-center gap-3 text-sm text-[#5865F2] font-black mb-6 uppercase tracking-[0.2em]">
               <span>{post.date}</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#5865F2]/40" />
               <span>{post.author}</span>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white leading-[1.1] tracking-tight mb-8">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white leading-[1] tracking-tight mb-12 text-balance">
               {post.title}
             </h1>
             
-            <div className="w-full aspect-video md:aspect-[21/9] rounded-3xl overflow-hidden relative shadow-2xl mb-12">
+            <div className="w-full aspect-video md:aspect-[21/9] rounded-[2.5rem] overflow-hidden relative shadow-2xl mb-12 border border-white/5 group">
               <img 
                 src={post.imageUrl} 
                 alt={post.title} 
                 fetchPriority="high"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
             </div>
           </div>
 
           <div 
             ref={contentRef}
-            className="blog-content max-w-3xl mx-auto"
+            className="blog-content max-w-3xl mx-auto mb-24"
             dangerouslySetInnerHTML={{ __html: post.content }}
           />
-        </article>
 
-        <div className="mt-16 pt-8 border-t border-white/10 max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-6">
-           <div className="flex items-center gap-3">
-             <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-white text-xl">
-               {post.author.charAt(0)}
-             </div>
-             <div>
-               <p className="text-white font-bold text-sm">Escrito por {post.author}</p>
-               <p className="text-zinc-400 text-xs">Ajudando a conectar pessoas</p>
-             </div>
-           </div>
-           
-           <button className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl text-zinc-300 transition-colors text-sm font-medium">
-             <Share2 className="w-4 h-4" /> Compartilhar Artigo
-           </button>
-        </div>
+          {/* New Humanized Author Card */}
+          <div className="bg-[#1e1f22] border border-white/5 rounded-[2.5rem] p-8 md:p-12 mb-16 flex flex-col md:flex-row items-center gap-8 md:gap-12 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-[#5865F2]/10 blur-[100px] rounded-full -mr-32 -mt-32 pointer-events-none group-hover:bg-[#5865F2]/20 transition-all duration-700" />
+            
+            <div className="relative shrink-0">
+               <div className="w-32 h-32 rounded-[2rem] border-4 border-white/10 overflow-hidden bg-zinc-800 shadow-2xl transform md:-rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                  <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author}`} alt={post.author} className="w-full h-full object-cover" />
+               </div>
+            </div>
+
+            <div className="flex-1 text-center md:text-left space-y-4">
+              <div>
+                <p className="text-[#5865F2] font-black text-xs uppercase tracking-widest mb-1">Escrito por</p>
+                <h4 className="text-3xl font-black text-white">{post.author}</h4>
+              </div>
+              <p className="text-zinc-400 text-lg leading-relaxed italic">
+                "{post.authorBio || 'Apaixonado por criar conexões humanas genuínas através da tecnologia.'}"
+              </p>
+              <div className="flex items-center justify-center md:justify-start gap-4">
+                 <button className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white text-white hover:text-black font-black text-xs rounded-xl transition-all uppercase tracking-widest">
+                   <Share2 className="w-4 h-4" /> Compartilhar
+                 </button>
+              </div>
+            </div>
+          </div>
+        </article>
 
       </main>
 

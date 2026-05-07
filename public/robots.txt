@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://papos.com.br/sitemap.xml

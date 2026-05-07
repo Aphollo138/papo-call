@@ -102,37 +102,48 @@ function BlogCard({ post, onNavigate, index }: { post: BlogPost, onNavigate: any
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className="bg-[#1e1f22] border border-white/5 rounded-2xl overflow-hidden hover:border-[#5865F2]/50 transition-colors group flex flex-col h-full shadow-lg"
+      className="bg-[#1e1f22] border border-white/5 rounded-3xl overflow-hidden hover:border-[#5865F2]/50 transition-all group flex flex-col h-full shadow-lg hover:shadow-2xl hover:shadow-[#5865F2]/10"
     >
-      <div className="h-48 overflow-hidden relative cursor-pointer" onClick={() => onNavigate('blog_post', { slug: post.slug })}>
-        <div className="absolute inset-0 bg-[#5865F2]/20 opacity-0 group-hover:opacity-100 transition-opacity z-10" />
+      <div className="h-56 overflow-hidden relative cursor-pointer" onClick={() => onNavigate('blog_post', { slug: post.slug })}>
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1e1f22] via-transparent to-transparent opacity-0 group-hover:opacity-60 transition-opacity z-10" />
         <img 
           src={post.imageUrl} 
           loading="lazy"
           alt={post.title} 
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
         />
+        {post.popular && (
+          <div className="absolute top-4 left-4 z-20 px-3 py-1 bg-orange-500 text-white text-[10px] font-black uppercase tracking-widest rounded-full flex items-center gap-1 shadow-lg">
+            <Flame className="w-3 h-3" /> Popular
+          </div>
+        )}
       </div>
-      <div className="p-6 flex flex-col flex-1">
-        <div className="flex items-center gap-2 text-xs text-zinc-500 font-medium mb-3">
-          <span>{post.date}</span>
-          <span className="w-1 h-1 rounded-full bg-zinc-600" />
-          <span>{post.author}</span>
+      <div className="p-7 flex flex-col flex-1">
+        <div className="flex items-center gap-3 mb-5">
+           <div className="w-10 h-10 rounded-full border-2 border-white/10 overflow-hidden bg-zinc-800">
+              <img src={post.authorAvatar || `https://api.dicebear.com/7.x/initials/svg?seed=${post.author}`} alt={post.author} className="w-full h-full object-cover" />
+           </div>
+           <div>
+              <p className="text-white font-bold text-sm leading-none mb-1">{post.author}</p>
+              <p className="text-zinc-500 text-[10px] uppercase font-bold tracking-widest">{post.date}</p>
+           </div>
         </div>
+        
         <h3 
-          className="text-xl font-bold text-white mb-3 leading-tight group-hover:text-[#5865F2] transition-colors cursor-pointer"
+          className="text-2xl font-black text-white mb-4 leading-tight group-hover:text-[#5865F2] transition-colors cursor-pointer line-clamp-2"
           onClick={() => onNavigate('blog_post', { slug: post.slug })}
         >
           {post.title}
         </h3>
-        <p className="text-zinc-400 text-sm leading-relaxed mb-6 flex-1">
+        <p className="text-zinc-400 text-base leading-relaxed mb-6 flex-1 line-clamp-3">
           {post.excerpt}
         </p>
         <button 
           onClick={() => onNavigate('blog_post', { slug: post.slug })}
-          className="text-[#5865F2] font-bold text-sm flex items-center gap-1 hover:gap-2 transition-all self-start w-full py-3 bg-white/5 hover:bg-[#5865F2]/10 rounded-xl justify-center"
+          className="group/btn relative overflow-hidden px-6 py-4 bg-white/5 hover:bg-[#5865F2] text-white font-black text-sm rounded-2xl transition-all flex items-center justify-center gap-2"
         >
-          Ler Artigo Completo <ArrowRight className="w-4 h-4" />
+          <span className="relative z-10">LER ARTIGO AGORA</span>
+          <ArrowRight className="w-4 h-4 relative z-10 transition-transform group-hover/btn:translate-x-1" />
         </button>
       </div>
     </motion.article>

@@ -28,8 +28,10 @@ const GlobalChat = lazy(() => import('./components/GlobalChat'));
 import PublicHeader from './components/blog/PublicHeader';
 const BlogList = lazy(() => import('./components/blog/BlogList'));
 const BlogPost = lazy(() => import('./components/blog/BlogPost'));
+const AboutUs = lazy(() => import('./components/AboutUs'));
+const ContactUs = lazy(() => import('./components/ContactUs'));
 
-type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'admin' | 'blog_list' | 'blog_post';
+type AppState = 'landing' | 'login' | 'register' | 'profile' | 'dashboard' | 'call' | 'terms' | 'privacy' | 'about' | 'contact' | 'admin' | 'blog_list' | 'blog_post';
 
 export default function App() {
   const getInitialState = (): { state: AppState, slug?: string } => {
@@ -37,6 +39,8 @@ export default function App() {
     if (path === '/blog') return { state: 'blog_list' };
     if (path === '/login') return { state: 'login' };
     if (path === '/register') return { state: 'register' };
+    if (path === '/sobre' || path === '/sobre-nos') return { state: 'about' };
+    if (path === '/contato' || path === '/fale-conosco') return { state: 'contact' };
     if (path.startsWith('/blog/')) {
       const slug = path.replace('/blog/', '');
       return { state: 'blog_post', slug };
@@ -62,6 +66,10 @@ export default function App() {
         setAppState('blog_post');
       } else if (path === '/' || path === '') {
         setAppState('landing');
+      } else if (path === '/sobre' || path === '/sobre-nos') {
+        setAppState('about');
+      } else if (path === '/contato' || path === '/fale-conosco') {
+        setAppState('contact');
       }
     };
     
@@ -103,6 +111,10 @@ export default function App() {
       window.history.pushState({}, '', '/register');
     } else if (state === 'landing') {
       window.history.pushState({}, '', '/');
+    } else if (state === 'about') {
+      window.history.pushState({}, '', '/sobre');
+    } else if (state === 'contact') {
+      window.history.pushState({}, '', '/contato');
     } else {
       window.history.pushState({}, '', '/');
     }
@@ -141,6 +153,8 @@ export default function App() {
           {appState === 'call' && callData && <CallInterface roomId={callData.roomId} isCaller={callData.isCaller} onLeave={() => { setCallData(null); handleNavigate('dashboard'); }} key="call" />}
           {appState === 'terms' && <Terms onBack={() => handleNavigate('landing')} key="terms" />}
           {appState === 'privacy' && <Privacy onBack={() => handleNavigate('landing')} key="privacy" />}
+          {appState === 'about' && <AboutUs onBack={() => handleNavigate('landing')} onNavigate={handleNavigate} key="about" />}
+          {appState === 'contact' && <ContactUs onBack={() => handleNavigate('landing')} onNavigate={handleNavigate} key="contact" />}
           {appState === 'admin' && <AdminPanel onNavigate={handleNavigate} key="admin" />}
           {appState === 'blog_list' && <BlogList onNavigate={handleNavigate} key="blog_list" />}
           {appState === 'blog_post' && <BlogPost slug={blogSlug} onNavigate={handleNavigate} key="blog_post" />}

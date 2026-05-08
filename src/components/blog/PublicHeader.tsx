@@ -51,6 +51,18 @@ export default function PublicHeader({ onNavigate, activePath }: PublicHeaderPro
                 <motion.div layoutId="nav-indicator" className="absolute -bottom-2 left-0 w-full h-0.5 bg-[#5865F2] rounded-full" />
               )}
             </button>
+            <button 
+              onClick={() => onNavigate('about')} 
+              className="text-sm font-bold text-zinc-400 hover:text-white transition-all"
+            >
+              Sobre
+            </button>
+            <button 
+              onClick={() => onNavigate('contact')} 
+              className="text-sm font-bold text-zinc-400 hover:text-white transition-all"
+            >
+              Contato
+            </button>
           </nav>
 
           <div className="flex items-center gap-3">
@@ -97,6 +109,18 @@ export default function PublicHeader({ onNavigate, activePath }: PublicHeaderPro
               className={`text-lg font-bold text-left py-2 ${activePath === 'blog' ? 'text-white' : 'text-zinc-400'}`}
             >
               Blog
+            </button>
+            <button 
+              onClick={() => { setIsMobileMenuOpen(false); onNavigate('about'); }} 
+              className="text-lg font-bold text-left py-2 text-zinc-400"
+            >
+              Sobre Nós
+            </button>
+            <button 
+              onClick={() => { setIsMobileMenuOpen(false); onNavigate('contact'); }} 
+              className="text-lg font-bold text-left py-2 text-zinc-400"
+            >
+              Fale Conosco
             </button>
             <button 
               onClick={() => { setIsMobileMenuOpen(false); onNavigate('login'); }} 

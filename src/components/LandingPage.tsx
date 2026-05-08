@@ -1,7 +1,19 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Cloud, Gamepad2, Headphones, MessagesSquare, Star, Rocket, Music, UserPlus } from 'lucide-react';
+import { Cloud, Gamepad2, Headphones, MessagesSquare, Star, Rocket, Music, UserPlus, Instagram } from 'lucide-react';
 import PublicHeader from './blog/PublicHeader';
+
+const TikTokIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M19.589 6.686a4.793 4.793 0 0 1-3.77-4.245V2h-3.445v13.672a2.896 2.896 0 0 1-5.201 1.743l-.002-.001.002.001a2.895 2.895 0 0 1 3.183-4.51v-3.5a6.903 6.903 0 0 0-1.011-.074c-3.873 0-7.012 3.14-7.012 7.012 0 3.873 3.139 7.012 7.012 7.012 3.872 0 7.012-3.139 7.012-7.012V7.043a8.103 8.103 0 0 0 4.774 1.523v-3.352a4.834 4.834 0 0 1-1.542-.528z"/>
+  </svg>
+);
+
+const RedditIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.056 1.597.04.21.063.427.063.643 0 2.834-3.334 5.132-7.447 5.132-4.113 0-7.447-2.298-7.447-5.132 0-.216.023-.434.062-.643a1.757 1.757 0 0 1-1.055-1.597c0-.968.786-1.754 1.754-1.754.463 0 .875.18 1.179.475 1.187-.852 2.83-1.42 4.644-1.5l1.039-4.811L15 4.542l-.001.002a1.242 1.242 0 0 1 2.011.2zm-6.082 8.358c-.624 0-1.128.505-1.128 1.129 0 .624.505 1.128 1.128 1.128.625 0 1.129-.504 1.129-1.128 0-.624-.504-1.129-1.129-1.129zm4.27 0c-.624 0-1.129.505-1.129 1.129 0 .624.505 1.128 1.129 1.128.624 0 1.128-.504 1.128-1.128 0-.624-.505-1.129-1.128-1.129zm-5.12 3.655l.235.253c1.026-.81 2.378-.81 3.404.0l.235-.253c-1.226-.967-2.651-.967-3.874 0z"/>
+  </svg>
+);
 
 export default function LandingPage({ onNavigate }: { onNavigate: (state: any) => void }) {
   return (
@@ -134,17 +146,80 @@ export default function LandingPage({ onNavigate }: { onNavigate: (state: any) =
         </div>
       </section>
 
-      <footer className="border-t border-white/5 py-12 px-6 bg-[#09090b]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 flex items-center justify-center grayscale opacity-80 hover:opacity-100 transition-opacity">
-              <img src="https://i.postimg.cc/jDfHpdjL/image.png" width="32" height="32" alt="Papos Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+      <footer className="border-t border-white/5 pt-20 pb-12 px-6 bg-[#09090b]">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 mb-16">
+            {/* Sobre Nós */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 flex items-center justify-center grayscale opacity-80">
+                  <img src="https://i.postimg.cc/jDfHpdjL/image.png" width="40" height="40" alt="Papos Logo" className="w-full h-full object-contain" referrerPolicy="no-referrer" />
+                </div>
+                <span className="text-2xl font-black text-white tracking-tighter">Papos</span>
+              </div>
+              <p className="text-zinc-500 text-lg leading-relaxed">
+                O Papos nasceu da vontade de resgatar o valor das conversas reais. Em um mundo dominado por textos frios e algoritmos, acreditamos que a voz humana é a ponte mais curta para a empatia e amizades que duram de verdade. Nossa missão é criar um lugar onde todos possam pertencer e ser ouvidos.
+              </p>
             </div>
-            <span className="text-lg font-bold text-zinc-500">Papos</span>
+
+            {/* Links Rápidos */}
+            <div className="space-y-6">
+              <h4 className="text-white font-black uppercase tracking-widest text-sm">Institucional</h4>
+              <ul className="space-y-4">
+                <li>
+                  <button onClick={() => onNavigate('about')} className="text-zinc-500 hover:text-[#5865F2] transition-colors text-lg font-medium flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" /> Sobre Nós
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate('contact')} className="text-zinc-500 hover:text-[#5865F2] transition-colors text-lg font-medium flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" /> Fale Conosco
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate('terms')} className="text-zinc-500 hover:text-[#5865F2] transition-colors text-lg font-medium flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" /> Termos de Serviço
+                  </button>
+                </li>
+                <li>
+                  <button onClick={() => onNavigate('privacy')} className="text-zinc-500 hover:text-[#5865F2] transition-colors text-lg font-medium flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-zinc-800" /> Privacidade
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Redes Sociais */}
+            <div className="space-y-6 text-center md:text-left">
+              <h4 className="text-white font-black uppercase tracking-widest text-sm">Nossa Comunidade</h4>
+              <div className="flex flex-wrap justify-center md:justify-start gap-4">
+                <a href="https://www.instagram.com/brpapos/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl">
+                  <Instagram className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+                </a>
+                <a href="https://www.tiktok.com/@brpapos?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl">
+                  <TikTokIcon className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+                </a>
+                <a href="https://www.reddit.com/user/EmotionalStation4797/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl">
+                  <RedditIcon className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+                </a>
+              </div>
+              <p className="text-zinc-600 text-sm italic py-2 border-l-2 border-zinc-800 pl-4 font-medium hidden md:block">
+                Siga-nos para atualizações e suporte.
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-6">
-            <button onClick={() => onNavigate('terms')} className="text-sm font-medium text-zinc-500 hover:text-white transition-colors">Termos do Serviço</button>
-            <button onClick={() => onNavigate('privacy')} className="text-sm font-medium text-zinc-500 hover:text-white transition-colors">Privacidade</button>
+
+          <div className="pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+            <p className="text-zinc-600 text-sm font-medium">
+              &copy; {new Date().getFullYear()} Papos. Feito para humanos, por humanos.
+            </p>
+            <div className="flex items-center gap-4 text-zinc-600 text-[10px] font-bold uppercase tracking-tighter">
+              <span>Segurança</span>
+              <span className="w-1 h-1 rounded-full bg-zinc-800" />
+              <span>Privacidade</span>
+              <span className="w-1 h-1 rounded-full bg-zinc-800" />
+              <span>Conexão</span>
+            </div>
           </div>
         </div>
       </footer>

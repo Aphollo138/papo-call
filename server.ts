@@ -116,6 +116,16 @@ app.post('/api/moderate', (req, res) => {
   }
 });
 
+app.post('/api/contact', async (req, res) => {
+  const { name, email, username, message } = req.body;
+  
+  const alertMessage = `📬 <b>NOVA MENSAGEM DE CONTATO</b> 📬\n\n<b>Nome:</b> ${name}\n<b>E-mail:</b> ${email}\n<b>Usuário:</b> ${username || 'N/A'}\n\n<b>Mensagem:</b>\n<i>${message}</i>\n\n<b>Horário:</b> ${new Date().toLocaleString('pt-BR')}`;
+  
+  await sendTelegramAlert(alertMessage);
+  
+  res.json({ success: true });
+});
+
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({

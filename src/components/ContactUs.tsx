@@ -16,12 +16,45 @@ export default function ContactUs({ onBack, onNavigate }: { onBack: () => void, 
     e.preventDefault();
     setStatus('sending');
     
-    // Simulate sending to social@papo.net.br
-    // In a real app, you'd use Formspree, a custom backend, or emailjs.
-    setTimeout(() => {
-      setStatus('success');
-      setFormData({ name: '', email: '', username: '', message: '' });
-    }, 1500);
+    try {
+      // 1. Send to Formspree for actual email delivery to social@papo.net.br
+      const formspreePromise = fetch("https://formspree.io/f/mnqepprq", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          username: formData.username,
+          message: formData.message,
+          _subject: `Novo Contato Papos: ${formData.name}`,
+          _replyto: formData.email
+        })
+      });
+
+      // 2. Send to our own API for Telegram notification
+      const localApiPromise = fetch("/api/contact", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      const [formspreeRes] = await Promise.all([formspreePromise, localApiPromise]);
+
+      if (formspreeRes.ok) {
+        setStatus('success');
+        setFormData({ name: '', email: '', username: '', message: '' });
+      } else {
+        throw new Error('Erro ao enviar');
+      }
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
+    }
   };
 
   return (
@@ -35,7 +68,7 @@ export default function ContactUs({ onBack, onNavigate }: { onBack: () => void, 
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-12"
           >
-            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tghter mb-4">
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4">
               Fale Conosco
             </h1>
             <p className="text-zinc-500 font-medium">
@@ -67,6 +100,26 @@ export default function ContactUs({ onBack, onNavigate }: { onBack: () => void, 
                     className="text-[#5865F2] font-black uppercase tracking-widest text-sm hover:underline"
                   >
                     Enviar outra mensagem
+                  </button>
+                </motion.div>
+              ) : status === 'error' ? (
+                <motion.div 
+                  key="error"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="py-12 text-center"
+                >
+                  <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <AlertCircle className="w-10 h-10 text-red-500" />
+                  </div>
+                  <h2 className="text-2xl font-black text-white mb-4">Ops! Algo deu errado.</h2>
+                  <p className="text-zinc-400 mb-8">Não foi possível enviar sua mensagem agora. Tente novamente mais tarde ou envie diretamente para social@papo.net.br.</p>
+                  <button 
+                    onClick={() => setStatus('idle')}
+                    className="text-[#5865F2] font-black uppercase tracking-widest text-sm hover:underline font-black"
+                  >
+                    Tentar Novamente
                   </button>
                 </motion.div>
               ) : (

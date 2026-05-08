@@ -193,14 +193,14 @@ export default function LandingPage({ onNavigate }: { onNavigate: (state: any) =
             <div className="space-y-6 text-center md:text-left">
               <h4 className="text-white font-black uppercase tracking-widest text-sm">Nossa Comunidade</h4>
               <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                <a href="https://www.instagram.com/brpapos/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl">
-                  <Instagram className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+                <a href="https://www.instagram.com/brpapos/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl ring-4 ring-white/10 hover:ring-[#5865F2]/20">
+                  <Instagram className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
                 </a>
-                <a href="https://www.tiktok.com/@brpapos?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl">
-                  <TikTokIcon className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+                <a href="https://www.tiktok.com/@brpapos?is_from_webapp=1&sender_device=pc" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl ring-4 ring-white/10 hover:ring-[#5865F2]/20">
+                  <TikTokIcon className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
                 </a>
-                <a href="https://www.reddit.com/user/EmotionalStation4797/" target="_blank" rel="noopener noreferrer" className="w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl">
-                  <RedditIcon className="w-6 h-6 transform group-hover:scale-110 transition-transform" />
+                <a href="https://www.reddit.com/user/EmotionalStation4797/" target="_blank" rel="noopener noreferrer" className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#191919] hover:bg-zinc-200 transition-all group shadow-xl ring-4 ring-white/10 hover:ring-[#5865F2]/20">
+                  <RedditIcon className="w-5 h-5 transform group-hover:scale-110 transition-transform" />
                 </a>
               </div>
               <p className="text-zinc-600 text-sm italic py-2 border-l-2 border-zinc-800 pl-4 font-medium hidden md:block">

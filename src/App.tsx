@@ -19,7 +19,7 @@ const Community = lazy(() => import('./components/Community'));
 const SettingsModal = lazy(() => import('./components/ui/SettingsModal'));
 const Terms = lazy(() => import('./components/legal/Terms'));
 const Privacy = lazy(() => import('./components/legal/Privacy'));
-const AdminPanel = lazy(() => import('./components/admin/AdminPanel'));
+const AdminPanel = lazy(() => import('./components/admin/AdminPainel'));
 const SupportTicketModal = lazy(() => import('./components/ui/SupportTicketModal'));
 const TicketDetails = lazy(() => import('./components/ui/TicketDetails'));
 const MaintenanceScreen = lazy(() => import('./components/MaintenanceScreen'));

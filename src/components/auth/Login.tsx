@@ -134,23 +134,30 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const mode = searchParams.get('mode');
-    const code = searchParams.get('oobCode') || searchParams.get('Code');
+    const code = searchParams.get('oobCode') || searchParams.get('Code') || searchParams.get('code');
 
     if (mode === 'verifyEmail' && code) {
       setVerifying(true);
-      setVerifyMessage('Verificando sua conta...');
+      setVerifyMessage('Verificando sua conta. Por favor, aguarde...');
       applyActionCode(auth, code)
         .then(() => {
-          setVerifyMessage('E-mail verificado com sucesso! Agora, faça seu primeiro login.');
+          setVerifyMessage('E-mail verificado com sucesso! Sua conta está pronta. Agora, faça seu login abaixo.');
           window.history.replaceState({}, document.title, window.location.pathname);
-          // Sign out the user to prevent auto-login if they were still signed in from registration
           if (auth.currentUser) {
             auth.signOut();
           }
         })
         .catch((err) => {
-          console.error(err);
-          setVerifyMessage('O link de verificação é inválido ou expirou.');
+          console.error('Verification Error:', err);
+          let msg = 'O link de verificação é inválido ou já foi utilizado.';
+          if (err.code === 'auth/invalid-action-code') {
+            msg = 'O código de verificação é inválido. Tente solicitar um novo.';
+          } else if (err.code === 'auth/expired-action-code') {
+            msg = 'O link de verificação expirou. Por favor, registre-se novamente ou peça um novo link.';
+          } else if (err.code === 'auth/unauthorized-domain') {
+            msg = 'Este domínio não está autorizado no Firebase. Adicione "papo.net.br" nos domínios autorizados do Console do Firebase.';
+          }
+          setVerifyMessage(msg);
         })
         .finally(() => {
           setVerifying(false);
@@ -162,8 +169,7 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
     }
   }, []);
 
-  // Remove the onAuthStateChanged useEffect that was auto-logging the user in
-  // to ensure they stay on the login screen to type their email and password manually.
+  // Removed the onAuthStateChanged useEffect as requested before
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -172,13 +178,20 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      if (!userCredential.user.emailVerified) {
-        setError('Por favor, verifique seu e-mail antes de entrar.');
+      // Force a reload to ensure we have the most up-to-date verification status
+      await userCredential.user.reload();
+      const user = auth.currentUser;
+
+      if (user && !user.emailVerified) {
+        setError('E-mail ainda não verificado. Verifique sua caixa de entrada (e spam) pelo link de confirmação.');
         setLoading(false);
+        // We sign out to avoid leaving a "semi-logged in" session
+        await auth.signOut();
         return;
       }
 
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         
@@ -213,9 +226,14 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
       } else {
         setError('Erro ao buscar dados do usuário.');
       }
-    } catch (err: any) {
+    }
+  } catch (err: any) {
       console.error(err);
-      setError('E-mail ou senha incorretos.');
+      if (err.message && err.message.includes('Missing or insufficient permissions')) {
+        setError('Erro de permissão no Firebase. As regras de segurança do Firestore (rules) estão bloqueando o acesso. Configure o Firebase para permitir leitura e escrita temporariamente para testes.');
+      } else {
+        setError('E-mail ou senha incorretos.');
+      }
     }
     setLoading(false);
   };

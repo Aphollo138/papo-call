@@ -17,24 +17,7 @@ export default function ContactUs({ onBack, onNavigate }: { onBack: () => void, 
     setStatus('sending');
     
     try {
-      // 1. Send to Formspree for actual email delivery to social@papo.net.br
-      const formspreePromise = fetch("https://formspree.io/f/mnqepprq", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          username: formData.username,
-          message: formData.message,
-          _subject: `Novo Contato Papos: ${formData.name}`,
-          _replyto: formData.email
-        })
-      });
-
-      // 2. Send to our own API for Telegram notification
+      // 1. Try sending to our own API for Telegram notification first
       const localApiPromise = fetch("/api/contact", {
         method: "POST",
         headers: {
@@ -43,16 +26,36 @@ export default function ContactUs({ onBack, onNavigate }: { onBack: () => void, 
         body: JSON.stringify(formData)
       });
 
-      const [formspreeRes] = await Promise.all([formspreePromise, localApiPromise]);
+      // 2. Also try Formspree in the background (as a backup/email delivery)
+      // Note: This often fails if the form ID is not configured/verified
+      const formspreePromise = fetch("https://formspree.io/f/mnqepprq", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify({
+          ...formData,
+          _subject: `Novo Contato Papos: ${formData.name}`,
+          _replyto: formData.email
+        })
+      }).catch(err => {
+        console.warn("Formspree backup failed:", err);
+        return { ok: false };
+      });
 
-      if (formspreeRes.ok) {
+      // We wait for both but prioritize the local API response for the UI success state
+      const [localApiRes] = await Promise.all([localApiPromise, formspreePromise]);
+
+      if (localApiRes.ok) {
         setStatus('success');
         setFormData({ name: '', email: '', username: '', message: '' });
       } else {
-        throw new Error('Erro ao enviar');
+        const errorData = await localApiRes.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erro ao enviar');
       }
     } catch (err) {
-      console.error(err);
+      console.error('Submission Error:', err);
       setStatus('error');
     }
   };
@@ -94,7 +97,15 @@ export default function ContactUs({ onBack, onNavigate }: { onBack: () => void, 
                     <CheckCircle className="w-10 h-10 text-green-500" />
                   </div>
                   <h2 className="text-2xl font-black text-white mb-4">Mensagem Enviada!</h2>
-                  <p className="text-zinc-400 mb-8">Recebemos sua mensagem e entraremos em contato através do e-mail social@papo.net.br.</p>
+                  <p className="text-zinc-400 mb-8">Recebemos sua mensagem. Nossa equipe analisará seu contato e responderá em breve via e-mail.</p>
+                  
+                  <div className="bg-zinc-950/50 rounded-2xl p-6 border border-white/5 mb-8 text-left">
+                    <p className="text-xs font-black text-zinc-500 uppercase tracking-widest mb-2 text-center">Contato Direto</p>
+                    <a href="mailto:social@papo.net.br" className="text-white font-bold flex items-center justify-center gap-2 hover:text-[#5865F2] transition-colors break-all">
+                      <Mail className="w-4 h-4 flex-shrink-0" /> social@papo.net.br
+                    </a>
+                  </div>
+
                   <button 
                     onClick={() => setStatus('idle')}
                     className="text-[#5865F2] font-black uppercase tracking-widest text-sm hover:underline"
